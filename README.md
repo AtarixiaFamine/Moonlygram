@@ -17,8 +17,8 @@
 </p>
 
 <p align="center">
-  <a href="https://pypi.org/project/moonlygram/"><img src="https://img.shields.io/pypi/v/moonlygram.svg" alt="PyPI"></a>
-  <img src="https://img.shields.io/pypi/pyversions/moonlygram.svg" alt="Python versions">
+  <a href="https://pypi.org/project/moonlygram/"><img src="https://img.shields.io/pypi/v/moonlygram.svg?cacheSeconds=3600" alt="PyPI"></a>
+  <img src="https://img.shields.io/pypi/pyversions/moonlygram.svg?cacheSeconds=3600" alt="Python versions">
   <img src="https://img.shields.io/badge/mypy-strict-blue.svg" alt="mypy strict">
   <img src="https://img.shields.io/badge/Bot%20API-10.1-2CA5E0.svg" alt="Bot API 10.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License"></a>
