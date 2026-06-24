@@ -1,0 +1,88 @@
+site_name: Moonlygram
+site_description: An async Telegram Bot API client with rich messages.
+site_url: https://atarixiafamine.github.io/Moonlygram/
+repo_url: https://github.com/AtarixiaFamine/Moonlygram
+repo_name: AtarixiaFamine/Moonlygram
+copyright: Copyright &copy; 2026 AtarixiaFamine
+
+# Material for MkDocs: a polished, searchable site that still runs on
+# mkdocstrings, so docstrings stay plain prose (no Sphinx/RST). Grouped nav
+# sections + light/dark toggle give the "intentional docs" feel.
+theme:
+  name: material
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.top
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: null
+            show_source: false
+            members_order: source
+            show_root_heading: true
+            show_signature_annotations: true
+            separate_signature: true
+            heading_level: 2
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - Quickstart: quickstart.md
+      - Migrating from python-telegram-bot: migrating.md
+  - Guides:
+      - Handlers & filters: handlers.md
+      - Conversations: conversations.md
+      - Scheduling jobs: scheduling.md
+      - Persistence: persistence.md
+      - Performance: performance.md
+      - Rich messages: rich-messages.md
+  - API reference:
+      - Bot: api/bot.md
+      - Application & handlers: api/ext.md
+      - Filters: api/filters.md
+      - Types: api/types.md
+      - Errors: api/errors.md
+      - Rich: api/rich.md

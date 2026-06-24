@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check src tests codegen
+      - name: Type-check
+        run: mypy
+      - name: Test
+        run: pytest -q
+
+  codegen-fresh:
+    # Fails if _types_generated.py was hand-edited or left stale after a spec or
+    # overrides change — the generator output must always be committed.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+      - name: Regenerate types
+        run: python codegen/gen_types.py
+      - name: Verify no drift
+        run: git diff --exit-code -- src/moonlygram/_types_generated.py

@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "moonlygram"
+version = "0.1.0"
+description = "An async Telegram Bot API client with built-in rich-message support."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "AtarixiaFamine" }]
+keywords = ["telegram", "bot", "bot-api", "async", "rich-messages"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Communications :: Chat",
+    "Typing :: Typed",
+]
+dependencies = ["httpx>=0.27"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff", "mypy>=1.11"]
+docs = ["mkdocs-material>=9.5", "mkdocstrings[python]>=0.26"]
+
+[project.urls]
+Homepage = "https://github.com/AtarixiaFamine/Moonlygram"
+Repository = "https://github.com/AtarixiaFamine/Moonlygram"
+Issues = "https://github.com/AtarixiaFamine/Moonlygram/issues"
+Changelog = "https://github.com/AtarixiaFamine/Moonlygram/blob/main/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/moonlygram"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["src/moonlygram"]
+
+# The generated de-serialization layer reads an untyped dict[str, Any] and is
+# deliberately lenient (a missing field degrades to None rather than crashing),
+# so the from_dict constructor calls trip arg-type. The field type declarations
+# themselves stay strict and are enforced at every use site across the library.
+[[tool.mypy.overrides]]
+module = "moonlygram._types_generated"
+disable_error_code = ["arg-type"]
