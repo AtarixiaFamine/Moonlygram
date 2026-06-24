@@ -1,3 +1,13 @@
+<p align="center">
+  <a href="https://github.com/AtarixiaFamine/Moonlygram">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/AtarixiaFamine/Moonlygram/main/docs/logo-white.png">
+      <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/AtarixiaFamine/Moonlygram/main/docs/logo-black.png">
+      <img alt="Moonlygram Logo" width="128" src="https://raw.githubusercontent.com/AtarixiaFamine/Moonlygram/main/docs/logo-black.png">
+    </picture>
+  </a>
+</p>
+
 <h1 align="center">Moonlygram</h1>
 
 <p align="center">
