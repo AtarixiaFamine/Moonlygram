@@ -6,6 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1]
+
+### Fixed
+- `markdown_to_rich`: inline formatting inside table cells now renders. Bold,
+  italics, links, and math in a cell were previously shown as literal Markdown
+  because cells were escaped and stashed before the inline passes ran. Cells are
+  now run through the inline pipeline, and the split into cells happens before
+  the math and emphasis passes, so a `$...$` span can no longer swallow a column
+  delimiter and fuse two cells.
+
 ## [0.1.0]
 
 First public release.

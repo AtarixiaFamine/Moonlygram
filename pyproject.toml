@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "moonlygram"
-version = "0.1.0"
+version = "0.1.1"
 description = "An async Telegram Bot API client with built-in rich-message support."
 readme = "README.md"
 requires-python = ">=3.10"
