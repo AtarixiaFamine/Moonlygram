@@ -113,6 +113,32 @@ def test_markdown_to_rich_table():
     )
 
 
+def test_markdown_to_rich_table_cells_format_inline():
+    from moonlygram import markdown_to_rich
+
+    out = markdown_to_rich(
+        "| Country | GDP |\n| - | - |\n| **Germany** | [src](http://u) |"
+    )
+    assert out == (
+        "<table bordered striped>"
+        "<tr><th>Country</th><th>GDP</th></tr>"
+        '<tr><td><b>Germany</b></td><td><a href="http://u">src</a></td></tr>'
+        "</table>"
+    )
+
+
+def test_markdown_to_rich_table_math_does_not_span_columns():
+    from moonlygram import markdown_to_rich
+
+    # Each cell keeps its own math; the column delimiter is never swallowed.
+    out = markdown_to_rich("| A | B |\n| - | - |\n| $4.686$ | $5.014$ |")
+    assert out == (
+        "<table bordered striped><tr><th>A</th><th>B</th></tr>"
+        "<tr><td><tg-math>4.686</tg-math></td>"
+        "<td><tg-math>5.014</tg-math></td></tr></table>"
+    )
+
+
 async def test_send_rich_message_with_builder():
     from moonlygram.rich import RichMessage, bold
 
