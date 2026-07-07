@@ -127,6 +127,22 @@ def test_markdown_to_rich_table_cells_format_inline():
     )
 
 
+def test_markdown_to_rich_table_cell_br_becomes_break():
+    from moonlygram import markdown_to_rich
+
+    # <br> is the GitHub-table idiom for an in-cell line break; every spelling
+    # (and case) becomes the renderer's own <br/>, not literal &lt;br&gt; text.
+    out = markdown_to_rich(
+        "| Role | Notes |\n| - | - |\n| DPS<br>Energy | a<br/>b<BR />c |"
+    )
+    assert out == (
+        "<table bordered striped>"
+        "<tr><th>Role</th><th>Notes</th></tr>"
+        "<tr><td>DPS<br/>Energy</td><td>a<br/>b<br/>c</td></tr>"
+        "</table>"
+    )
+
+
 def test_markdown_to_rich_table_math_does_not_span_columns():
     from moonlygram import markdown_to_rich
 

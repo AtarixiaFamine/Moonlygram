@@ -6,6 +6,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Button styling from Bot API 9.4: `style` ("primary", "success", or "danger")
+  and `icon_custom_emoji_id` on both `InlineKeyboardButton` and `KeyboardButton`.
+  `style` is typed as a `Literal` so unknown values are caught at type-check time.
+- `User.language_code` (the user's IETF language tag) is now parsed.
+
+### Fixed
+- `markdown_to_rich`: a literal `<br>` inside a Markdown table cell (the GitHub
+  idiom for an in-cell line break) now becomes a real break instead of showing
+  as literal text.
+
 ## [0.1.1]
 
 ### Fixed

@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 from moonlygram import (
+    InlineKeyboardButton,
+    KeyboardButton,
     Message,
     MessageOrigin,
     MessageReactionUpdated,
     ReactionTypeCustomEmoji,
     ReactionTypeEmoji,
     ReactionTypePaid,
+    User,
 )
 from moonlygram.ext import (
     filters,
@@ -119,6 +122,40 @@ def test_reaction_updated_parses_all_variants():
     assert isinstance(custom, ReactionTypeCustomEmoji) and custom.custom_emoji_id == "99"
     assert isinstance(paid, ReactionTypePaid)
     assert unknown == {"type": "future_kind", "data": 1}  # unknown kind kept raw
+
+
+def test_user_parses_language_code():
+    user = User.from_dict({"id": 1, "first_name": "A", "language_code": "en"})
+    assert user.language_code == "en"
+    assert User.from_dict({"id": 1, "first_name": "A"}).language_code is None
+
+
+def test_inline_keyboard_button_serializes_style_and_icon():
+    button = InlineKeyboardButton(
+        "Buy", callback_data="pay", style="primary", icon_custom_emoji_id="55"
+    )
+    assert button.to_dict() == {
+        "text": "Buy",
+        "callback_data": "pay",
+        "style": "primary",
+        "icon_custom_emoji_id": "55",
+    }
+
+
+def test_keyboard_button_serializes_style_and_icon():
+    assert KeyboardButton("Go", style="danger", icon_custom_emoji_id="7").to_dict() == {
+        "text": "Go",
+        "style": "danger",
+        "icon_custom_emoji_id": "7",
+    }
+
+
+def test_buttons_omit_style_and_icon_when_unset():
+    assert InlineKeyboardButton("Plain", url="https://x").to_dict() == {
+        "text": "Plain",
+        "url": "https://x",
+    }
+    assert KeyboardButton("Plain").to_dict() == {"text": "Plain"}
 
 
 def test_reply_and_forwarded_filters():
