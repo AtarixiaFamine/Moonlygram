@@ -133,9 +133,16 @@ def _render_cell(cell: str, stash: Callable[[str], str]) -> str:
 
     Inline code was already stashed before the table was parsed; here we stash
     math literally, escape the rest, then apply emphasis and links.
+
+    A literal ``<br>`` is the GitHub-table idiom for a line break inside a cell
+    (a cell cannot hold a real newline), so it is turned into the ``<br/>`` the
+    renderer uses for breaks elsewhere. We match it after escaping, when the
+    tag has become ``&lt;br&gt;`` so the conversion can't be confused with a
+    ``<`` the author actually typed as text.
     """
     cell = _stash_math(cell, stash)
     cell = html.escape(cell, quote=False)
+    cell = re.sub(r"&lt;\s*br\s*/?\s*&gt;", "<br/>", cell, flags=re.I)
     return _inline_format(cell)
 
 

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import asdict, dataclass, field
-from typing import IO, TYPE_CHECKING, Any, Optional, Union
+from typing import IO, TYPE_CHECKING, Any, Literal, Optional, Union
 
 if TYPE_CHECKING:
     from .bot import Bot
@@ -34,6 +34,7 @@ class User:
     first_name: str
     username: Optional[str] = None
     last_name: Optional[str] = None
+    language_code: Optional[str] = None
     _bot: "Optional[Bot]" = field(default=None, init=False, repr=False, compare=False)
 
     @classmethod
@@ -44,6 +45,7 @@ class User:
             first_name=d.get("first_name", ""),
             username=d.get("username"),
             last_name=d.get("last_name"),
+            language_code=d.get("language_code"),
         )
 
     def set_bot(self, bot: "Bot") -> None:
@@ -960,11 +962,17 @@ class InputFile:
 
 @dataclass(slots=True)
 class InlineKeyboardButton:
-    """A button on an inline keyboard. Set exactly one action (callback_data or url)."""
+    """A button on an inline keyboard. Set exactly one action (callback_data or url).
+
+    style colors the button: "primary", "success", or "danger" (Bot API 9.4).
+    icon_custom_emoji_id puts a custom emoji on the button.
+    """
 
     text: str
     callback_data: Optional[str] = None
     url: Optional[str] = None
+    style: Optional[Literal["primary", "success", "danger"]] = None
+    icon_custom_emoji_id: Optional[str] = None
 
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {"text": self.text}
@@ -972,6 +980,10 @@ class InlineKeyboardButton:
             d["callback_data"] = self.callback_data
         if self.url is not None:
             d["url"] = self.url
+        if self.style is not None:
+            d["style"] = self.style
+        if self.icon_custom_emoji_id is not None:
+            d["icon_custom_emoji_id"] = self.icon_custom_emoji_id
         return d
 
 
@@ -991,12 +1003,23 @@ class InlineKeyboardMarkup:
 
 @dataclass(slots=True)
 class KeyboardButton:
-    """A button on a custom reply keyboard."""
+    """A button on a custom reply keyboard.
+
+    style colors the button: "primary", "success", or "danger" (Bot API 9.4).
+    icon_custom_emoji_id puts a custom emoji on the button.
+    """
 
     text: str
+    style: Optional[Literal["primary", "success", "danger"]] = None
+    icon_custom_emoji_id: Optional[str] = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {"text": self.text}
+        d: dict[str, Any] = {"text": self.text}
+        if self.style is not None:
+            d["style"] = self.style
+        if self.icon_custom_emoji_id is not None:
+            d["icon_custom_emoji_id"] = self.icon_custom_emoji_id
+        return d
 
 
 @dataclass(slots=True)
