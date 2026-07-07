@@ -53,6 +53,17 @@ GENERATE: set[str] = {
     "BotShortDescription",
     "ForumTopic",
     "UserProfilePhotos",
+    # payments
+    "Invoice",
+    "SuccessfulPayment",
+    "RefundedPayment",
+    "OrderInfo",
+    "ShippingAddress",
+    # stars
+    "StarTransactions",
+    "StarTransaction",
+    "StarAmount",
+    "AffiliateInfo",
 }
 
 # Abstract spec types modelled as a single FLAT dataclass: the union of every
@@ -64,6 +75,8 @@ FLAT_UNIONS: set[str] = {
     "MessageOrigin",
     "ChatMember",
     "ChatBoostSource",
+    "TransactionPartner",
+    "RevenueWithdrawalState",
 }
 
 # Behavior-bearing types that stay HAND-WRITTEN in types.py (async shortcut
@@ -78,6 +91,8 @@ BEHAVIOR_TYPES: set[str] = {
     "InlineQuery",
     "ChosenInlineResult",
     "ChatJoinRequest",
+    "ShippingQuery",
+    "PreCheckoutQuery",
 }
 
 # Other types the generator may reference by `.from_dict` but does not own here

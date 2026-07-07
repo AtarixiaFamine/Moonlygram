@@ -27,6 +27,7 @@ from .types import (
     InlineQueryResult,
     InputMedia,
     InputSticker,
+    LabeledPrice,
     MaskPosition,
     Message,
     MessageId,
@@ -34,6 +35,9 @@ from .types import (
     ReactionType,
     ReplyMarkup,
     SentWebAppMessage,
+    ShippingOption,
+    StarAmount,
+    StarTransactions,
     Sticker,
     StickerSet,
     User,
@@ -1640,6 +1644,202 @@ class Bot:
                 "answerWebAppQuery",
                 web_app_query_id=web_app_query_id,
                 result=result.to_dict() if hasattr(result, "to_dict") else result,
+            )
+        )
+
+    async def send_invoice(
+        self,
+        chat_id: int | str,
+        title: str,
+        description: str,
+        payload: str,
+        currency: str,
+        prices: list[LabeledPrice],
+        *,
+        provider_token: Optional[str] = None,
+        max_tip_amount: Optional[int] = None,
+        suggested_tip_amounts: Optional[list[int]] = None,
+        start_parameter: Optional[str] = None,
+        provider_data: Optional[str] = None,
+        photo_url: Optional[str] = None,
+        need_name: Optional[bool] = None,
+        need_phone_number: Optional[bool] = None,
+        need_email: Optional[bool] = None,
+        need_shipping_address: Optional[bool] = None,
+        send_phone_number_to_provider: Optional[bool] = None,
+        send_email_to_provider: Optional[bool] = None,
+        is_flexible: Optional[bool] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        reply_to_message_id: Optional[int] = None,
+        reply_markup: Optional[ReplyMarkup] = None,
+    ) -> Message:
+        """Send an invoice. payload is your internal id, echoed back on payment.
+
+        Set need_shipping_address with is_flexible to receive shipping_query
+        updates. Star invoices (currency "XTR") take no provider_token.
+        """
+        return Message.from_dict(
+            await self._call(
+                "sendInvoice",
+                chat_id=chat_id,
+                title=title,
+                description=description,
+                payload=payload,
+                currency=currency,
+                prices=[price.to_dict() for price in prices],
+                provider_token=provider_token,
+                max_tip_amount=max_tip_amount,
+                suggested_tip_amounts=suggested_tip_amounts,
+                start_parameter=start_parameter,
+                provider_data=provider_data,
+                photo_url=photo_url,
+                need_name=need_name,
+                need_phone_number=need_phone_number,
+                need_email=need_email,
+                need_shipping_address=need_shipping_address,
+                send_phone_number_to_provider=send_phone_number_to_provider,
+                send_email_to_provider=send_email_to_provider,
+                is_flexible=is_flexible,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                reply_to_message_id=reply_to_message_id,
+                reply_markup=reply_markup,
+            )
+        )
+
+    async def create_invoice_link(
+        self,
+        title: str,
+        description: str,
+        payload: str,
+        currency: str,
+        prices: list[LabeledPrice],
+        *,
+        business_connection_id: Optional[str] = None,
+        provider_token: Optional[str] = None,
+        subscription_period: Optional[int] = None,
+        max_tip_amount: Optional[int] = None,
+        suggested_tip_amounts: Optional[list[int]] = None,
+        provider_data: Optional[str] = None,
+        photo_url: Optional[str] = None,
+        need_name: Optional[bool] = None,
+        need_phone_number: Optional[bool] = None,
+        need_email: Optional[bool] = None,
+        need_shipping_address: Optional[bool] = None,
+        send_phone_number_to_provider: Optional[bool] = None,
+        send_email_to_provider: Optional[bool] = None,
+        is_flexible: Optional[bool] = None,
+    ) -> str:
+        """Create a shareable invoice link and return the URL as a string."""
+        return str(
+            await self._call(
+                "createInvoiceLink",
+                title=title,
+                description=description,
+                payload=payload,
+                currency=currency,
+                prices=[price.to_dict() for price in prices],
+                business_connection_id=business_connection_id,
+                provider_token=provider_token,
+                subscription_period=subscription_period,
+                max_tip_amount=max_tip_amount,
+                suggested_tip_amounts=suggested_tip_amounts,
+                provider_data=provider_data,
+                photo_url=photo_url,
+                need_name=need_name,
+                need_phone_number=need_phone_number,
+                need_email=need_email,
+                need_shipping_address=need_shipping_address,
+                send_phone_number_to_provider=send_phone_number_to_provider,
+                send_email_to_provider=send_email_to_provider,
+                is_flexible=is_flexible,
+            )
+        )
+
+    async def answer_shipping_query(
+        self,
+        shipping_query_id: str,
+        ok: bool,
+        *,
+        shipping_options: Optional[list[ShippingOption]] = None,
+        error_message: Optional[str] = None,
+    ) -> bool:
+        """Reply to a shipping query. Pass shipping_options when ok is True,
+        or error_message explaining why delivery is impossible when ok is False.
+        """
+        return bool(
+            await self._call(
+                "answerShippingQuery",
+                shipping_query_id=shipping_query_id,
+                ok=ok,
+                shipping_options=(
+                    [option.to_dict() for option in shipping_options]
+                    if shipping_options is not None
+                    else None
+                ),
+                error_message=error_message,
+            )
+        )
+
+    async def answer_pre_checkout_query(
+        self,
+        pre_checkout_query_id: str,
+        ok: bool,
+        *,
+        error_message: Optional[str] = None,
+    ) -> bool:
+        """Respond to a pre-checkout query within 10 seconds. Pass ok=False with
+        an error_message to abort the checkout.
+        """
+        return bool(
+            await self._call(
+                "answerPreCheckoutQuery",
+                pre_checkout_query_id=pre_checkout_query_id,
+                ok=ok,
+                error_message=error_message,
+            )
+        )
+
+    async def get_star_transactions(
+        self,
+        *,
+        offset: Optional[int] = None,
+        limit: Optional[int] = None,
+    ) -> StarTransactions:
+        """Return the bot's Telegram Stars transactions, newest first."""
+        return StarTransactions.from_dict(
+            await self._call("getStarTransactions", offset=offset, limit=limit)
+        )
+
+    async def get_my_star_balance(self) -> StarAmount:
+        """Return the bot's current Telegram Stars balance."""
+        return StarAmount.from_dict(await self._call("getMyStarBalance"))
+
+    async def refund_star_payment(
+        self, user_id: int, telegram_payment_charge_id: str
+    ) -> bool:
+        """Refund a successful Telegram Stars payment back to the user."""
+        return bool(
+            await self._call(
+                "refundStarPayment",
+                user_id=user_id,
+                telegram_payment_charge_id=telegram_payment_charge_id,
+            )
+        )
+
+    async def edit_user_star_subscription(
+        self, user_id: int, telegram_payment_charge_id: str, is_canceled: bool
+    ) -> bool:
+        """Cancel or re-enable a user's Stars subscription. is_canceled=True stops
+        the next renewal; False reactivates a subscription cancelled this way.
+        """
+        return bool(
+            await self._call(
+                "editUserStarSubscription",
+                user_id=user_id,
+                telegram_payment_charge_id=telegram_payment_charge_id,
+                is_canceled=is_canceled,
             )
         )
 
