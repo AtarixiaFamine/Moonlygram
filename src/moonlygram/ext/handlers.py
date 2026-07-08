@@ -447,3 +447,17 @@ class ChatBoostHandler(BaseHandler):
         if self.kind == self.REMOVED_CHAT_BOOST:
             return update.removed_chat_boost is not None
         return update.chat_boost is not None or update.removed_chat_boost is not None
+
+
+class ShippingQueryHandler(BaseHandler):
+    """Run the callback on a shipping query (the shipping_query update)."""
+
+    def check_update(self, update: Update) -> bool:
+        return update.shipping_query is not None
+
+
+class PreCheckoutQueryHandler(BaseHandler):
+    """Run the callback on a pre-checkout query (the pre_checkout_query update)."""
+
+    def check_update(self, update: Update) -> bool:
+        return update.pre_checkout_query is not None

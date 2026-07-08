@@ -25,7 +25,9 @@ from .handlers import (
     MessageReactionHandler,
     PollAnswerHandler,
     PollHandler,
+    PreCheckoutQueryHandler,
     PrefixHandler,
+    ShippingQueryHandler,
     TypeHandler,
 )
 from .jobqueue import Job, JobQueue
@@ -48,6 +50,8 @@ __all__ = [
     "PollAnswerHandler",
     "MessageReactionHandler",
     "ChatBoostHandler",
+    "ShippingQueryHandler",
+    "PreCheckoutQueryHandler",
     "ConversationHandler",
     "PrefixHandler",
     "TypeHandler",

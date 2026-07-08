@@ -177,6 +177,9 @@ class Message:
     new_chat_members: Optional[list[User]] = None
     left_chat_member: Optional[User] = None
     pinned_message: Optional["Message"] = None
+    invoice: Optional[Invoice] = None
+    successful_payment: Optional[SuccessfulPayment] = None
+    refunded_payment: Optional[RefundedPayment] = None
     raw: dict[str, Any] = field(default_factory=dict, repr=False)
     _bot: "Optional[Bot]" = field(default=None, init=False, repr=False, compare=False)
 
@@ -233,6 +236,17 @@ class Message:
             pinned_message=(
                 Message.from_dict(d["pinned_message"])
                 if "pinned_message" in d
+                else None
+            ),
+            invoice=Invoice.from_dict(d["invoice"]) if "invoice" in d else None,
+            successful_payment=(
+                SuccessfulPayment.from_dict(d["successful_payment"])
+                if "successful_payment" in d
+                else None
+            ),
+            refunded_payment=(
+                RefundedPayment.from_dict(d["refunded_payment"])
+                if "refunded_payment" in d
                 else None
             ),
             raw=d,
@@ -412,6 +426,8 @@ class Update:
     chat_join_request: Optional[ChatJoinRequest] = None
     inline_query: Optional[InlineQuery] = None
     chosen_inline_result: Optional[ChosenInlineResult] = None
+    shipping_query: Optional[ShippingQuery] = None
+    pre_checkout_query: Optional[PreCheckoutQuery] = None
     poll: Optional[Poll] = None
     poll_answer: Optional[PollAnswer] = None
     message_reaction: Optional[MessageReactionUpdated] = None
@@ -466,6 +482,16 @@ class Update:
             chosen_inline_result=(
                 ChosenInlineResult.from_dict(d["chosen_inline_result"])
                 if "chosen_inline_result" in d
+                else None
+            ),
+            shipping_query=(
+                ShippingQuery.from_dict(d["shipping_query"])
+                if "shipping_query" in d
+                else None
+            ),
+            pre_checkout_query=(
+                PreCheckoutQuery.from_dict(d["pre_checkout_query"])
+                if "pre_checkout_query" in d
                 else None
             ),
             poll=Poll.from_dict(d["poll"]) if "poll" in d else None,
@@ -549,6 +575,10 @@ class Update:
             return self.inline_query.from_user.id
         if self.chosen_inline_result is not None:
             return self.chosen_inline_result.from_user.id
+        if self.shipping_query is not None:
+            return self.shipping_query.from_user.id
+        if self.pre_checkout_query is not None:
+            return self.pre_checkout_query.from_user.id
         if self.poll_answer is not None and self.poll_answer.user is not None:
             return self.poll_answer.user.id
         if self.message_reaction is not None and self.message_reaction.user is not None:
@@ -584,6 +614,10 @@ class Update:
             self.inline_query.set_bot(bot)
         if self.chosen_inline_result is not None:
             self.chosen_inline_result.from_user.set_bot(bot)
+        if self.shipping_query is not None:
+            self.shipping_query.set_bot(bot)
+        if self.pre_checkout_query is not None:
+            self.pre_checkout_query.set_bot(bot)
         if self.poll_answer is not None:
             if self.poll_answer.user is not None:
                 self.poll_answer.user.set_bot(bot)
@@ -760,6 +794,95 @@ class ChatJoinRequest:
 
 
 @dataclass(slots=True)
+class ShippingQuery:
+    """An incoming shipping query (the shipping_query update).
+
+    Sent for invoices with is_flexible set, once the user picks a shipping
+    address. Reply with answer() to offer delivery options or report an error.
+    """
+
+    id: str
+    from_user: User
+    invoice_payload: str
+    shipping_address: ShippingAddress
+    raw: dict[str, Any] = field(default_factory=dict, repr=False)
+    _bot: "Optional[Bot]" = field(default=None, init=False, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "ShippingQuery":
+        return cls(
+            id=d["id"],
+            from_user=User.from_dict(d["from"]),
+            invoice_payload=d["invoice_payload"],
+            shipping_address=ShippingAddress.from_dict(d["shipping_address"]),
+            raw=d,
+        )
+
+    def set_bot(self, bot: "Bot") -> None:
+        self._bot = bot
+        self.from_user.set_bot(bot)
+
+    async def answer(
+        self,
+        ok: bool,
+        *,
+        shipping_options: "Optional[list[ShippingOption]]" = None,
+        error_message: Optional[str] = None,
+    ) -> bool:
+        """Reply with delivery options (ok=True) or an error (ok=False)."""
+        return await _bound(self).answer_shipping_query(
+            self.id,
+            ok,
+            shipping_options=shipping_options,
+            error_message=error_message,
+        )
+
+
+@dataclass(slots=True)
+class PreCheckoutQuery:
+    """An incoming pre-checkout query (the pre_checkout_query update).
+
+    The final confirmation before payment. Telegram expects answer() within 10
+    seconds; pass ok=False with an error_message to abort the checkout.
+    """
+
+    id: str
+    from_user: User
+    currency: str
+    total_amount: int
+    invoice_payload: str
+    shipping_option_id: Optional[str] = None
+    order_info: Optional[OrderInfo] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False)
+    _bot: "Optional[Bot]" = field(default=None, init=False, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "PreCheckoutQuery":
+        return cls(
+            id=d["id"],
+            from_user=User.from_dict(d["from"]),
+            currency=d["currency"],
+            total_amount=d["total_amount"],
+            invoice_payload=d["invoice_payload"],
+            shipping_option_id=d.get("shipping_option_id"),
+            order_info=(
+                OrderInfo.from_dict(d["order_info"]) if "order_info" in d else None
+            ),
+            raw=d,
+        )
+
+    def set_bot(self, bot: "Bot") -> None:
+        self._bot = bot
+        self.from_user.set_bot(bot)
+
+    async def answer(self, ok: bool, *, error_message: Optional[str] = None) -> bool:
+        """Confirm (ok=True) or reject (ok=False, with error_message) checkout."""
+        return await _bound(self).answer_pre_checkout_query(
+            self.id, ok, error_message=error_message
+        )
+
+
+@dataclass(slots=True)
 class BotCommand:
     """A bot command shown in the client's command menu."""
 
@@ -772,6 +895,37 @@ class BotCommand:
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> "BotCommand":
         return cls(command=d["command"], description=d["description"])
+
+
+@dataclass(slots=True)
+class LabeledPrice:
+    """One labeled line item in an invoice price breakdown.
+
+    amount is in the currency's smallest units (for example cents), so
+    LabeledPrice("Total", 500) is 5.00 of a two-decimal currency.
+    """
+
+    label: str
+    amount: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"label": self.label, "amount": self.amount}
+
+
+@dataclass(slots=True)
+class ShippingOption:
+    """A delivery option offered in reply to a shipping query."""
+
+    id: str
+    title: str
+    prices: list[LabeledPrice]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "title": self.title,
+            "prices": [price.to_dict() for price in self.prices],
+        }
 
 
 def _input_media_dict(
@@ -1341,6 +1495,7 @@ InlineQueryResult = Union[
 # surface (moonlygram.types) is unchanged. Edit codegen/overrides.py to
 # change what is modelled, then re-run the generator.
 from ._types_generated import (  # noqa: E402
+    AffiliateInfo as AffiliateInfo,
     Animation as Animation,
     Audio as Audio,
     BotDescription as BotDescription,
@@ -1358,20 +1513,30 @@ from ._types_generated import (  # noqa: E402
     Document as Document,
     File as File,
     ForumTopic as ForumTopic,
+    Invoice as Invoice,
     Location as Location,
     MessageEntity as MessageEntity,
     MessageId as MessageId,
     MessageOrigin as MessageOrigin,
     MessageReactionCountUpdated as MessageReactionCountUpdated,
     MessageReactionUpdated as MessageReactionUpdated,
+    OrderInfo as OrderInfo,
     PhotoSize as PhotoSize,
     Poll as Poll,
     PollAnswer as PollAnswer,
     PollOption as PollOption,
     ReactionCount as ReactionCount,
+    RefundedPayment as RefundedPayment,
+    RevenueWithdrawalState as RevenueWithdrawalState,
     SentWebAppMessage as SentWebAppMessage,
+    ShippingAddress as ShippingAddress,
+    StarAmount as StarAmount,
+    StarTransaction as StarTransaction,
+    StarTransactions as StarTransactions,
     Sticker as Sticker,
     StickerSet as StickerSet,
+    SuccessfulPayment as SuccessfulPayment,
+    TransactionPartner as TransactionPartner,
     UserChatBoosts as UserChatBoosts,
     UserProfilePhotos as UserProfilePhotos,
     Venue as Venue,

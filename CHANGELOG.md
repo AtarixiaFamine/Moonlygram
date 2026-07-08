@@ -11,6 +11,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   and `icon_custom_emoji_id` on both `InlineKeyboardButton` and `KeyboardButton`.
   `style` is typed as a `Literal` so unknown values are caught at type-check time.
 - `User.language_code` (the user's IETF language tag) is now parsed.
+- Payments: `send_invoice`, `create_invoice_link`, `answer_shipping_query`, and
+  `answer_pre_checkout_query` methods; the `shipping_query` and
+  `pre_checkout_query` updates with `ShippingQueryHandler` /
+  `PreCheckoutQueryHandler` and `.answer()` shortcuts on the query objects.
+  New types `LabeledPrice`, `ShippingOption`, `Invoice`, `SuccessfulPayment`,
+  `RefundedPayment`, `OrderInfo`, `ShippingAddress`, and `Message.invoice` /
+  `successful_payment` / `refunded_payment` parsing.
+- Telegram Stars: `get_star_transactions`, `get_my_star_balance`,
+  `refund_star_payment`, and `edit_user_star_subscription` methods, with the
+  `StarTransactions`, `StarTransaction`, `StarAmount`, `AffiliateInfo`,
+  `TransactionPartner`, and `RevenueWithdrawalState` types.
 
 ### Fixed
 - `markdown_to_rich`: a literal `<br>` inside a Markdown table cell (the GitHub

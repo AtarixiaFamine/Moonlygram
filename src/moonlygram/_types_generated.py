@@ -19,6 +19,31 @@ from .types import (  # noqa: E402
 
 
 @dataclass(slots=True)
+class AffiliateInfo:
+    """Contains information about the affiliate that received a commission via this
+    transaction.
+    """
+
+    commission_per_mille: int
+    amount: int
+    affiliate_user: Optional[User] = None
+    affiliate_chat: Optional[Chat] = None
+    nanostar_amount: Optional[int] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "AffiliateInfo":
+        return cls(
+            commission_per_mille=d.get("commission_per_mille"),
+            amount=d.get("amount"),
+            affiliate_user=User.from_dict(d["affiliate_user"]) if "affiliate_user" in d else None,
+            affiliate_chat=Chat.from_dict(d["affiliate_chat"]) if "affiliate_chat" in d else None,
+            nanostar_amount=d.get("nanostar_amount"),
+            raw=d,
+        )
+
+
+@dataclass(slots=True)
 class Animation:
     """This object represents an animation file (GIF or H.264/MPEG-4 AVC video without
     sound).
@@ -482,6 +507,29 @@ class ForumTopic:
 
 
 @dataclass(slots=True)
+class Invoice:
+    """This object contains basic information about an invoice."""
+
+    title: str
+    description: str
+    start_parameter: str
+    currency: str
+    total_amount: int
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "Invoice":
+        return cls(
+            title=d.get("title"),
+            description=d.get("description"),
+            start_parameter=d.get("start_parameter"),
+            currency=d.get("currency"),
+            total_amount=d.get("total_amount"),
+            raw=d,
+        )
+
+
+@dataclass(slots=True)
 class Location:
     """This object represents a point on the map."""
 
@@ -630,6 +678,27 @@ class MessageReactionUpdated:
             new_reaction=_reactions(d.get("new_reaction")),
             user=User.from_dict(d["user"]) if "user" in d else None,
             actor_chat=Chat.from_dict(d["actor_chat"]) if "actor_chat" in d else None,
+            raw=d,
+        )
+
+
+@dataclass(slots=True)
+class OrderInfo:
+    """This object represents information about an order."""
+
+    name: Optional[str] = None
+    phone_number: Optional[str] = None
+    email: Optional[str] = None
+    shipping_address: Optional[ShippingAddress] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "OrderInfo":
+        return cls(
+            name=d.get("name"),
+            phone_number=d.get("phone_number"),
+            email=d.get("email"),
+            shipping_address=ShippingAddress.from_dict(d["shipping_address"]) if "shipping_address" in d else None,
             raw=d,
         )
 
@@ -784,6 +853,51 @@ class ReactionCount:
 
 
 @dataclass(slots=True)
+class RefundedPayment:
+    """This object contains basic information about a refunded payment."""
+
+    currency: str
+    total_amount: int
+    invoice_payload: str
+    telegram_payment_charge_id: str
+    provider_payment_charge_id: Optional[str] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "RefundedPayment":
+        return cls(
+            currency=d.get("currency"),
+            total_amount=d.get("total_amount"),
+            invoice_payload=d.get("invoice_payload"),
+            telegram_payment_charge_id=d.get("telegram_payment_charge_id"),
+            provider_payment_charge_id=d.get("provider_payment_charge_id"),
+            raw=d,
+        )
+
+
+@dataclass(slots=True)
+class RevenueWithdrawalState:
+    """This object describes the state of a revenue withdrawal operation. Currently,
+    it can be one of - RevenueWithdrawalStatePending -
+    RevenueWithdrawalStateSucceeded - RevenueWithdrawalStateFailed
+    """
+
+    type: str
+    date: Optional[int] = None
+    url: Optional[str] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "RevenueWithdrawalState":
+        return cls(
+            type=d.get("type"),
+            date=d.get("date"),
+            url=d.get("url"),
+            raw=d,
+        )
+
+
+@dataclass(slots=True)
 class SentWebAppMessage:
     """Describes an inline message sent by a Web App on behalf of a user."""
 
@@ -794,6 +908,92 @@ class SentWebAppMessage:
     def from_dict(cls, d: dict[str, Any]) -> "SentWebAppMessage":
         return cls(
             inline_message_id=d.get("inline_message_id"),
+            raw=d,
+        )
+
+
+@dataclass(slots=True)
+class ShippingAddress:
+    """This object represents a shipping address."""
+
+    country_code: str
+    state: str
+    city: str
+    street_line1: str
+    street_line2: str
+    post_code: str
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "ShippingAddress":
+        return cls(
+            country_code=d.get("country_code"),
+            state=d.get("state"),
+            city=d.get("city"),
+            street_line1=d.get("street_line1"),
+            street_line2=d.get("street_line2"),
+            post_code=d.get("post_code"),
+            raw=d,
+        )
+
+
+@dataclass(slots=True)
+class StarAmount:
+    """Describes an amount of Telegram Stars."""
+
+    amount: int
+    nanostar_amount: Optional[int] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "StarAmount":
+        return cls(
+            amount=d.get("amount"),
+            nanostar_amount=d.get("nanostar_amount"),
+            raw=d,
+        )
+
+
+@dataclass(slots=True)
+class StarTransaction:
+    """Describes a Telegram Star transaction. Note that if the buyer initiates a
+    chargeback with the payment provider from whom they acquired Stars (e.g.,
+    Apple, Google) following this transaction, the refunded Stars will be deducted
+    from the bot's balance. This is outside of Telegram's control.
+    """
+
+    id: str
+    amount: int
+    date: int
+    nanostar_amount: Optional[int] = None
+    source: Optional[TransactionPartner] = None
+    receiver: Optional[TransactionPartner] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "StarTransaction":
+        return cls(
+            id=d.get("id"),
+            amount=d.get("amount"),
+            date=d.get("date"),
+            nanostar_amount=d.get("nanostar_amount"),
+            source=TransactionPartner.from_dict(d["source"]) if "source" in d else None,
+            receiver=TransactionPartner.from_dict(d["receiver"]) if "receiver" in d else None,
+            raw=d,
+        )
+
+
+@dataclass(slots=True)
+class StarTransactions:
+    """Contains a list of Telegram Star transactions."""
+
+    transactions: list[StarTransaction]
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "StarTransactions":
+        return cls(
+            transactions=[StarTransaction.from_dict(i) for i in d["transactions"]] if "transactions" in d else None,
             raw=d,
         )
 
@@ -860,6 +1060,91 @@ class StickerSet:
             sticker_type=d.get("sticker_type"),
             stickers=[Sticker.from_dict(i) for i in d["stickers"]] if "stickers" in d else None,
             thumbnail=PhotoSize.from_dict(d["thumbnail"]) if "thumbnail" in d else None,
+            raw=d,
+        )
+
+
+@dataclass(slots=True)
+class SuccessfulPayment:
+    """This object contains basic information about a successful payment. Note that if
+    the buyer initiates a chargeback with the relevant payment provider following
+    this transaction, the funds may be debited from your balance. This is outside
+    of Telegram's control.
+    """
+
+    currency: str
+    total_amount: int
+    invoice_payload: str
+    telegram_payment_charge_id: str
+    provider_payment_charge_id: str
+    subscription_expiration_date: Optional[int] = None
+    is_recurring: Optional[bool] = None
+    is_first_recurring: Optional[bool] = None
+    shipping_option_id: Optional[str] = None
+    order_info: Optional[OrderInfo] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "SuccessfulPayment":
+        return cls(
+            currency=d.get("currency"),
+            total_amount=d.get("total_amount"),
+            invoice_payload=d.get("invoice_payload"),
+            telegram_payment_charge_id=d.get("telegram_payment_charge_id"),
+            provider_payment_charge_id=d.get("provider_payment_charge_id"),
+            subscription_expiration_date=d.get("subscription_expiration_date"),
+            is_recurring=d.get("is_recurring"),
+            is_first_recurring=d.get("is_first_recurring"),
+            shipping_option_id=d.get("shipping_option_id"),
+            order_info=OrderInfo.from_dict(d["order_info"]) if "order_info" in d else None,
+            raw=d,
+        )
+
+
+@dataclass(slots=True)
+class TransactionPartner:
+    """This object describes the source of a transaction, or its recipient for
+    outgoing transactions. Currently, it can be one of - TransactionPartnerUser -
+    TransactionPartnerChat - TransactionPartnerAffiliateProgram -
+    TransactionPartnerFragment - TransactionPartnerTelegramAds -
+    TransactionPartnerTelegramApi - TransactionPartnerOther
+    """
+
+    type: str
+    transaction_type: Optional[str] = None
+    user: Optional[User] = None
+    affiliate: Optional[AffiliateInfo] = None
+    invoice_payload: Optional[str] = None
+    subscription_period: Optional[int] = None
+    paid_media: Optional[list[dict[str, Any]]] = None
+    paid_media_payload: Optional[str] = None
+    gift: Optional[dict[str, Any]] = None
+    premium_subscription_duration: Optional[int] = None
+    chat: Optional[Chat] = None
+    sponsor_user: Optional[User] = None
+    commission_per_mille: Optional[int] = None
+    withdrawal_state: Optional[RevenueWithdrawalState] = None
+    request_count: Optional[int] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "TransactionPartner":
+        return cls(
+            type=d.get("type"),
+            transaction_type=d.get("transaction_type"),
+            user=User.from_dict(d["user"]) if "user" in d else None,
+            affiliate=AffiliateInfo.from_dict(d["affiliate"]) if "affiliate" in d else None,
+            invoice_payload=d.get("invoice_payload"),
+            subscription_period=d.get("subscription_period"),
+            paid_media=d.get("paid_media"),
+            paid_media_payload=d.get("paid_media_payload"),
+            gift=d.get("gift"),
+            premium_subscription_duration=d.get("premium_subscription_duration"),
+            chat=Chat.from_dict(d["chat"]) if "chat" in d else None,
+            sponsor_user=User.from_dict(d["sponsor_user"]) if "sponsor_user" in d else None,
+            commission_per_mille=d.get("commission_per_mille"),
+            withdrawal_state=RevenueWithdrawalState.from_dict(d["withdrawal_state"]) if "withdrawal_state" in d else None,
+            request_count=d.get("request_count"),
             raw=d,
         )
 
