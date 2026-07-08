@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-08
+
 ### Added
 - Button styling from Bot API 9.4: `style` ("primary", "success", or "danger")
   and `icon_custom_emoji_id` on both `InlineKeyboardButton` and `KeyboardButton`.
