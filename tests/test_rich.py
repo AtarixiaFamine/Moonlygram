@@ -195,3 +195,102 @@ async def test_send_rich_message_draft_requires_one_format():
     bot, _ = fake_bot()
     with pytest.raises(ValueError):
         await bot.send_rich_message_draft(1, 2)
+
+
+def test_rich_block_paragraph_and_heading_to_dict():
+    from moonlygram.rich import InputRichBlockParagraph, InputRichBlockSectionHeading
+
+    assert InputRichBlockParagraph("hi").to_dict() == {"type": "paragraph", "text": "hi"}
+    assert InputRichBlockSectionHeading("T", size=1).to_dict() == {
+        "type": "heading",
+        "text": "T",
+        "size": 1,
+    }
+
+
+def test_rich_block_list_nests_items():
+    from moonlygram.rich import (
+        InputRichBlockList,
+        InputRichBlockListItem,
+        InputRichBlockParagraph,
+    )
+
+    block = InputRichBlockList(
+        items=[InputRichBlockListItem(blocks=[InputRichBlockParagraph("a")], value=1)]
+    )
+    assert block.to_dict() == {
+        "type": "list",
+        "items": [{"blocks": [{"type": "paragraph", "text": "a"}], "value": 1}],
+    }
+
+
+def test_rich_block_table_nests_cells_and_prunes():
+    from moonlygram.rich import InputRichBlockTable, RichBlockTableCell
+
+    table = InputRichBlockTable(
+        cells=[[RichBlockTableCell(text="A", is_header=True), RichBlockTableCell()]],
+        is_bordered=True,
+    )
+    assert table.to_dict() == {
+        "type": "table",
+        "cells": [[{"text": "A", "is_header": True}, {}]],
+        "is_bordered": True,
+    }
+
+
+def test_rich_block_photo_serializes_inner_media():
+    from moonlygram import InputMediaPhoto
+    from moonlygram.rich import InputRichBlockPhoto, RichBlockCaption
+
+    block = InputRichBlockPhoto(InputMediaPhoto("file1"), caption=RichBlockCaption(text="cap"))
+    assert block.to_dict() == {
+        "type": "photo",
+        "photo": {"type": "photo", "media": "file1"},
+        "caption": {"text": "cap"},
+    }
+
+
+def test_input_rich_message_media_to_dict():
+    from moonlygram import InputMediaVideo
+    from moonlygram.rich import InputRichMessageMedia
+
+    media = InputRichMessageMedia(id="v1", media=InputMediaVideo("file2"))
+    assert media.to_dict() == {"id": "v1", "media": {"type": "video", "media": "file2"}}
+
+
+async def test_send_rich_message_with_blocks():
+    from moonlygram.rich import InputRichBlockParagraph
+
+    bot, session = fake_bot(_MESSAGE_DICT)
+    result = await bot.send_rich_message(1, blocks=[InputRichBlockParagraph("Hi")])
+    assert isinstance(result, Message)
+    method, params = session.calls[0]
+    assert method == "sendRichMessage"
+    assert params["rich_message"] == {"blocks": [{"type": "paragraph", "text": "Hi"}]}
+
+
+async def test_send_rich_message_with_media():
+    from moonlygram import InputMediaPhoto
+    from moonlygram.rich import InputRichMessageMedia
+
+    bot, session = fake_bot(_MESSAGE_DICT)
+    await bot.send_rich_message(
+        1,
+        markdown="![](tg://photo?id=p1)",
+        media=[InputRichMessageMedia(id="p1", media=InputMediaPhoto("file9"))],
+    )
+    _, params = session.calls[0]
+    assert params["rich_message"] == {
+        "markdown": "![](tg://photo?id=p1)",
+        "media": [{"id": "p1", "media": {"type": "photo", "media": "file9"}}],
+    }
+
+
+async def test_send_rich_message_blocks_conflicts_with_other_forms():
+    from moonlygram.rich import InputRichBlockParagraph
+
+    bot, _ = fake_bot()
+    with pytest.raises(ValueError):
+        await bot.send_rich_message(
+            1, html="<p>x</p>", blocks=[InputRichBlockParagraph("y")]
+        )

@@ -1,4 +1,4 @@
-"""Convert Markdown to Bot API 10.1 rich-message HTML.
+"""Convert Markdown to rich-message HTML.
 
 This turns the Markdown that an LLM (or a person) tends to produce into the rich
 HTML dialect Bot.send_rich_message accepts: fenced code, inline code, math,

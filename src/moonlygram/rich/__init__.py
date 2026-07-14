@@ -1,11 +1,41 @@
-"""Rich-message construction: a builder, inline helpers, and a Markdown converter.
+"""Rich-message construction: a builder, inline helpers, a Markdown converter, and blocks.
 
-Bot API 10.1 rich messages are this library's headline feature. Build one with
-RichMessage plus the inline helpers, or convert existing Markdown with
-markdown_to_rich; either way the result feeds Bot.send_rich_message.
+Rich messages are this library's headline feature. Build one with RichMessage
+plus the inline helpers, convert existing Markdown with markdown_to_rich, or
+describe it as a list of InputRichBlock* structured blocks (Bot API 10.2);
+every form feeds Bot.send_rich_message.
 """
 from __future__ import annotations
 
+from .blocks import (
+    InputRichBlock,
+    InputRichBlockAnchor,
+    InputRichBlockAnimation,
+    InputRichBlockAudio,
+    InputRichBlockBlockQuotation,
+    InputRichBlockCollage,
+    InputRichBlockDetails,
+    InputRichBlockDivider,
+    InputRichBlockFooter,
+    InputRichBlockList,
+    InputRichBlockListItem,
+    InputRichBlockMap,
+    InputRichBlockMathematicalExpression,
+    InputRichBlockParagraph,
+    InputRichBlockPhoto,
+    InputRichBlockPreformatted,
+    InputRichBlockPullQuotation,
+    InputRichBlockSectionHeading,
+    InputRichBlockSlideshow,
+    InputRichBlockTable,
+    InputRichBlockThinking,
+    InputRichBlockVideo,
+    InputRichBlockVoiceNote,
+    InputRichMessageMedia,
+    RichBlockCaption,
+    RichBlockTableCell,
+    RichText,
+)
 from .builder import (
     Inline,
     InlineContent,
@@ -42,4 +72,32 @@ __all__ = [
     "sub",
     "link",
     "math",
+    # Structured blocks (Bot API 10.2)
+    "RichText",
+    "RichBlockCaption",
+    "RichBlockTableCell",
+    "InputRichMessageMedia",
+    "InputRichBlockListItem",
+    "InputRichBlock",
+    "InputRichBlockParagraph",
+    "InputRichBlockSectionHeading",
+    "InputRichBlockPreformatted",
+    "InputRichBlockFooter",
+    "InputRichBlockDivider",
+    "InputRichBlockMathematicalExpression",
+    "InputRichBlockAnchor",
+    "InputRichBlockList",
+    "InputRichBlockBlockQuotation",
+    "InputRichBlockPullQuotation",
+    "InputRichBlockCollage",
+    "InputRichBlockSlideshow",
+    "InputRichBlockTable",
+    "InputRichBlockDetails",
+    "InputRichBlockMap",
+    "InputRichBlockAnimation",
+    "InputRichBlockAudio",
+    "InputRichBlockPhoto",
+    "InputRichBlockVideo",
+    "InputRichBlockVoiceNote",
+    "InputRichBlockThinking",
 ]

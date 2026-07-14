@@ -1,7 +1,7 @@
 # Moonlygram
 
 An async Telegram **Bot API** client. Pure HTTP, with no MTProto and no native
-dependencies. It covers the Bot API surface, including the Bot API 10.1 rich
+dependencies. It covers the Bot API surface, including Bot API 10.2 rich
 messages.
 
 A `Bot` holds the API methods, and an `Application` (in `moonlygram.ext`)
@@ -40,5 +40,5 @@ app.run_polling()
 ## Where to go next
 
 - [Quickstart](quickstart.md) — build and run a bot end to end.
-- [Rich messages](rich-messages.md) — sending Bot API 10.1 rich content.
+- [Rich messages](rich-messages.md) — sending Bot API 10.2 rich content.
 - [API reference](api/bot.md) — every public class and method.

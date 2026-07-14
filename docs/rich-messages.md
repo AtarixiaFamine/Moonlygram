@@ -12,7 +12,7 @@ from moonlygram.rich import bold, link
 msg = (
     RichMessage()
     .heading("Release notes")
-    .paragraph("Shipped ", bold("rich messages"), " — see ", link("the docs", "https://example.com"))
+    .paragraph("Shipped ", bold("rich messages"), ", see ", link("the docs", "https://example.com"))
     .code_block("pip install -U moonlygram", language="bash")
 )
 
@@ -32,9 +32,45 @@ from moonlygram import markdown_to_rich
 await bot.send_rich_message(chat_id, html=markdown_to_rich("# Hi\n\nSome **bold** text."))
 ```
 
+## Structured blocks
+
+Bot API 10.2 adds a third content form. Instead of an HTML or Markdown string,
+describe the message as a list of block objects and pass them as `blocks`. The
+block types live in `moonlygram.rich`.
+
+```python
+from moonlygram.rich import (
+    InputRichBlockList,
+    InputRichBlockListItem,
+    InputRichBlockParagraph,
+    InputRichBlockSectionHeading,
+)
+
+await bot.send_rich_message(
+    chat_id,
+    blocks=[
+        InputRichBlockSectionHeading("Release notes", size=1),
+        InputRichBlockParagraph("Two things shipped:"),
+        InputRichBlockList(
+            items=[
+                InputRichBlockListItem(blocks=[InputRichBlockParagraph("Structured blocks")]),
+                InputRichBlockListItem(blocks=[InputRichBlockParagraph("Ephemeral messages")]),
+            ]
+        ),
+    ],
+)
+```
+
+Pass exactly one of `html`, `markdown`, or `blocks`. When `html` or `markdown`
+text references a file through a `tg://photo?id=`, `tg://video?id=`, or
+`tg://audio?id=` link, supply those files with `media`, a list of
+`InputRichMessageMedia`.
+
 ## Streaming
 
 `send_rich_message_draft` updates an ephemeral draft repeatedly (about a 30s
-TTL); send the final version with `send_rich_message`.
+TTL); send the final version with `send_rich_message`. In a blocks draft,
+`InputRichBlockThinking` renders a "thinking" placeholder for content that has
+not arrived yet; it is valid only in drafts.
 
 See the [rich API reference](api/rich.md) for every block and inline helper.

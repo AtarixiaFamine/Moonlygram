@@ -4,7 +4,30 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0] - 2026-07-14
+
+### Added
+- Rich messages (Bot API 10.2): structured blocks as a third content form
+  alongside HTML and Markdown. `send_rich_message` and `send_rich_message_draft`
+  now accept `blocks` (a list of `InputRichBlock*` objects) and `media` (a list
+  of `InputRichMessageMedia`). The block types in `moonlygram.rich` cover
+  paragraphs, headings, preformatted text, footers, dividers, math, anchors,
+  lists, block and pull quotations, collages, slideshows, tables, details, maps,
+  and embedded animation, audio, photo, video, and voice-note media, with the
+  `RichBlockCaption` and `RichBlockTableCell` helpers. `InputMediaVoiceNote` is
+  new.
+- Ephemeral messages (Bot API 10.2): `receiver_user_id`, `callback_query_id`,
+  and `reply_parameters` on `send_message` and the eleven other affected send
+  methods; a new `ReplyParameters` type carrying `ephemeral_message_id`;
+  `edit_ephemeral_message_text`, `edit_ephemeral_message_media`,
+  `edit_ephemeral_message_caption`, `edit_ephemeral_message_reply_markup`, and
+  `delete_ephemeral_message`; `BotCommand.is_ephemeral`; and parsing of
+  `Message.receiver_user` and `Message.ephemeral_message_id`.
+
+### Notes
+- Communities and the `BotSubscriptionUpdated` update from Bot API 10.2 are not
+  modelled yet. Their data stays available on `Message.raw` and `Update.raw`
+  until the vendored spec is refreshed to 10.2.
 
 ## [0.2.0] - 2026-07-08
 

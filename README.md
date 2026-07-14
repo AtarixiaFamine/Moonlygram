@@ -20,7 +20,7 @@
   <a href="https://pypi.org/project/moonlygram/"><img src="https://img.shields.io/pypi/v/moonlygram.svg?cacheSeconds=3600" alt="PyPI"></a>
   <img src="https://img.shields.io/pypi/pyversions/moonlygram.svg?cacheSeconds=3600" alt="Python versions">
   <img src="https://img.shields.io/badge/mypy-strict-blue.svg" alt="mypy strict">
-  <img src="https://img.shields.io/badge/Bot%20API-10.1-2CA5E0.svg" alt="Bot API 10.1">
+  <img src="https://img.shields.io/badge/Bot%20API-10.2-2CA5E0.svg" alt="Bot API 10.2">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License"></a>
 </p>
 
@@ -31,7 +31,7 @@
 **Moonlygram** is an asynchronous framework for the Telegram **Bot API**. A `Bot` holds the API
 methods and an `Application` (`moonlygram.ext`) registers handlers and runs the update loop, so
 the shape feels familiar if you have used [python-telegram-bot](https://github.com/python-telegram-bot/python-telegram-bot).
-On top of that, it adds something no other library has: **rich messages** (Bot API 10.1).
+On top of that, it adds something no other library has: **rich messages** (Bot API 10.2).
 
 ## Installation
 
@@ -71,8 +71,9 @@ app.run_polling()
   update.
 - **Performant:** a non-blocking poll loop, optional parallel dispatch, a built-in rate limiter,
   and a dependency-free `JobQueue`.
-- **Rich:** send Bot API 10.1 rich messages (headings, tables, collapsibles, math) with a
-  composable, auto-escaping builder, or convert Markdown in one call. No other library has this.
+- **Rich:** send rich messages (headings, tables, collapsibles, math) with a composable,
+  auto-escaping builder, convert Markdown in one call, or build them from Bot API 10.2
+  structured blocks. No other library has this.
 - **Type-hinted:** ships `py.typed` and passes `mypy --strict`. The received types are generated
   from the Bot API schema, so they cannot silently drift.
 - **Lightweight:** one dependency (`httpx`). Pure HTTP, with no MTProto, no `api_id`/`api_hash`,
