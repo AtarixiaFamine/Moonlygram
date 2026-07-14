@@ -47,7 +47,8 @@ from .types import (
 )
 
 if TYPE_CHECKING:
-    from .rich import RichMessage
+    from .rich import InputRichBlock, InputRichMessageMedia, RichMessage
+    from .types import ReplyParameters
 
 _DEFAULTABLE = ("parse_mode", "disable_notification", "protect_content")
 
@@ -144,6 +145,9 @@ class Bot:
         parse_mode: Optional[str] = None,
         reply_to_message_id: Optional[int] = None,
         reply_markup: Optional[ReplyMarkup] = None,
+        receiver_user_id: Optional[int] = None,
+        callback_query_id: Optional[str] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a text message to a chat."""
         return Message.from_dict(
@@ -154,17 +158,39 @@ class Bot:
                 parse_mode=parse_mode,
                 reply_to_message_id=reply_to_message_id,
                 reply_markup=reply_markup,
+                receiver_user_id=receiver_user_id,
+                callback_query_id=callback_query_id,
+                reply_parameters=reply_parameters,
             )
         )
 
     @staticmethod
-    def _rich_message(html: Any, markdown: Optional[str]) -> dict[str, Any]:
-        """Build the rich_message payload, accepting a RichMessage for html."""
+    def _rich_message(
+        html: Any,
+        markdown: Optional[str],
+        blocks: Optional[list[Any]] = None,
+        media: Optional[list[Any]] = None,
+    ) -> dict[str, Any]:
+        """Build the rich_message payload from exactly one content form.
+
+        html accepts a RichMessage builder or an HTML string; blocks a list of
+        rich block objects (or dicts). media is an optional list of
+        InputRichMessageMedia referenced from the html or markdown text.
+        """
         if html is not None and hasattr(html, "to_html"):
             html = html.to_html()
-        if (html is None) == (markdown is None):
-            raise ValueError("Pass exactly one of `html` or `markdown`.")
-        return {"html": html} if html is not None else {"markdown": markdown}
+        if sum(form is not None for form in (html, markdown, blocks)) != 1:
+            raise ValueError("Pass exactly one of `html`, `markdown`, or `blocks`.")
+        if html is not None:
+            rich: dict[str, Any] = {"html": html}
+        elif markdown is not None:
+            rich = {"markdown": markdown}
+        else:
+            assert blocks is not None
+            rich = {"blocks": [_to_data(b) for b in blocks]}
+        if media is not None:
+            rich["media"] = [_to_data(m) for m in media]
+        return rich
 
     async def send_rich_message(
         self,
@@ -172,17 +198,21 @@ class Bot:
         *,
         html: "Optional[str | RichMessage]" = None,
         markdown: Optional[str] = None,
+        blocks: "Optional[list[InputRichBlock]]" = None,
+        media: "Optional[list[InputRichMessageMedia]]" = None,
     ) -> Message:
-        """Send a Bot API 10.1 rich message.
+        """Send a rich message.
 
-        Pass exactly one of html or markdown. html may be a rich-message HTML
-        string or a RichMessage builder; markdown is rendered by Telegram.
+        Pass exactly one of html, markdown, or blocks. html may be a
+        rich-message HTML string or a RichMessage builder; blocks is a list of
+        structured block objects (Bot API 10.2). media optionally supplies the
+        files that html or markdown text references through tg://…?id= links.
         """
         return Message.from_dict(
             await self._call(
                 "sendRichMessage",
                 chat_id=chat_id,
-                rich_message=self._rich_message(html, markdown),
+                rich_message=self._rich_message(html, markdown, blocks, media),
             )
         )
 
@@ -193,19 +223,21 @@ class Bot:
         *,
         html: "Optional[str | RichMessage]" = None,
         markdown: Optional[str] = None,
+        blocks: "Optional[list[InputRichBlock]]" = None,
+        media: "Optional[list[InputRichMessageMedia]]" = None,
     ) -> bool:
         """Send an ephemeral rich-message draft (about a 30s TTL).
 
         Use this to stream a response by repeatedly updating the same draft_id;
-        send the final version with send_rich_message. Pass exactly one of html
-        or markdown.
+        send the final version with send_rich_message. Pass exactly one of html,
+        markdown, or blocks.
         """
         return bool(
             await self._call(
                 "sendRichMessageDraft",
                 chat_id=chat_id,
                 draft_id=draft_id,
-                rich_message=self._rich_message(html, markdown),
+                rich_message=self._rich_message(html, markdown, blocks, media),
             )
         )
 
@@ -218,6 +250,9 @@ class Bot:
         parse_mode: Optional[str] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
+        receiver_user_id: Optional[int] = None,
+        callback_query_id: Optional[str] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a photo. Pass an InputFile to upload, or a file_id / URL string."""
         return Message.from_dict(
@@ -229,6 +264,9 @@ class Bot:
                 parse_mode=parse_mode,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
+                receiver_user_id=receiver_user_id,
+                callback_query_id=callback_query_id,
+                reply_parameters=reply_parameters,
             )
         )
 
@@ -241,6 +279,9 @@ class Bot:
         parse_mode: Optional[str] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
+        receiver_user_id: Optional[int] = None,
+        callback_query_id: Optional[str] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a general file. Pass an InputFile to upload, or a file_id / URL."""
         return Message.from_dict(
@@ -252,6 +293,9 @@ class Bot:
                 parse_mode=parse_mode,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
+                receiver_user_id=receiver_user_id,
+                callback_query_id=callback_query_id,
+                reply_parameters=reply_parameters,
             )
         )
 
@@ -264,6 +308,9 @@ class Bot:
         parse_mode: Optional[str] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
+        receiver_user_id: Optional[int] = None,
+        callback_query_id: Optional[str] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send an audio file shown in the music player."""
         return Message.from_dict(
@@ -275,6 +322,9 @@ class Bot:
                 parse_mode=parse_mode,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
+                receiver_user_id=receiver_user_id,
+                callback_query_id=callback_query_id,
+                reply_parameters=reply_parameters,
             )
         )
 
@@ -287,6 +337,9 @@ class Bot:
         parse_mode: Optional[str] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
+        receiver_user_id: Optional[int] = None,
+        callback_query_id: Optional[str] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a video file."""
         return Message.from_dict(
@@ -298,6 +351,9 @@ class Bot:
                 parse_mode=parse_mode,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
+                receiver_user_id=receiver_user_id,
+                callback_query_id=callback_query_id,
+                reply_parameters=reply_parameters,
             )
         )
 
@@ -310,6 +366,9 @@ class Bot:
         parse_mode: Optional[str] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
+        receiver_user_id: Optional[int] = None,
+        callback_query_id: Optional[str] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send an animation (GIF or soundless H.264/MPEG-4)."""
         return Message.from_dict(
@@ -321,6 +380,9 @@ class Bot:
                 parse_mode=parse_mode,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
+                receiver_user_id=receiver_user_id,
+                callback_query_id=callback_query_id,
+                reply_parameters=reply_parameters,
             )
         )
 
@@ -333,6 +395,9 @@ class Bot:
         parse_mode: Optional[str] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
+        receiver_user_id: Optional[int] = None,
+        callback_query_id: Optional[str] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a voice note."""
         return Message.from_dict(
@@ -344,6 +409,9 @@ class Bot:
                 parse_mode=parse_mode,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
+                receiver_user_id=receiver_user_id,
+                callback_query_id=callback_query_id,
+                reply_parameters=reply_parameters,
             )
         )
 
@@ -354,6 +422,9 @@ class Bot:
         *,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
+        receiver_user_id: Optional[int] = None,
+        callback_query_id: Optional[str] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a rounded square video note."""
         return Message.from_dict(
@@ -363,6 +434,9 @@ class Bot:
                 video_note=video_note,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
+                receiver_user_id=receiver_user_id,
+                callback_query_id=callback_query_id,
+                reply_parameters=reply_parameters,
             )
         )
 
@@ -373,6 +447,9 @@ class Bot:
         *,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
+        receiver_user_id: Optional[int] = None,
+        callback_query_id: Optional[str] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a sticker."""
         return Message.from_dict(
@@ -382,6 +459,9 @@ class Bot:
                 sticker=sticker,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
+                receiver_user_id=receiver_user_id,
+                callback_query_id=callback_query_id,
+                reply_parameters=reply_parameters,
             )
         )
 
@@ -394,6 +474,9 @@ class Bot:
         horizontal_accuracy: Optional[float] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
+        receiver_user_id: Optional[int] = None,
+        callback_query_id: Optional[str] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a point on the map."""
         return Message.from_dict(
@@ -405,6 +488,9 @@ class Bot:
                 horizontal_accuracy=horizontal_accuracy,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
+                receiver_user_id=receiver_user_id,
+                callback_query_id=callback_query_id,
+                reply_parameters=reply_parameters,
             )
         )
 
@@ -417,6 +503,9 @@ class Bot:
         last_name: Optional[str] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
+        receiver_user_id: Optional[int] = None,
+        callback_query_id: Optional[str] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a phone contact."""
         return Message.from_dict(
@@ -428,6 +517,9 @@ class Bot:
                 last_name=last_name,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
+                receiver_user_id=receiver_user_id,
+                callback_query_id=callback_query_id,
+                reply_parameters=reply_parameters,
             )
         )
 
@@ -504,6 +596,9 @@ class Bot:
         *,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
+        receiver_user_id: Optional[int] = None,
+        callback_query_id: Optional[str] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send information about a venue."""
         return Message.from_dict(
@@ -516,6 +611,9 @@ class Bot:
                 address=address,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
+                receiver_user_id=receiver_user_id,
+                callback_query_id=callback_query_id,
+                reply_parameters=reply_parameters,
             )
         )
 
@@ -822,6 +920,114 @@ class Bot:
         return bool(
             await self._call(
                 "deleteMessage", chat_id=chat_id, message_id=message_id
+            )
+        )
+
+    async def edit_ephemeral_message_text(
+        self,
+        chat_id: int | str,
+        receiver_user_id: int,
+        ephemeral_message_id: int,
+        text: str,
+        *,
+        parse_mode: Optional[str] = None,
+        reply_markup: Optional[ReplyMarkup] = None,
+    ) -> bool:
+        """Edit the text of an ephemeral message. Returns True on success.
+
+        The user may not receive the edit if they are offline.
+        """
+        return bool(
+            await self._call(
+                "editEphemeralMessageText",
+                chat_id=chat_id,
+                receiver_user_id=receiver_user_id,
+                ephemeral_message_id=ephemeral_message_id,
+                text=text,
+                parse_mode=parse_mode,
+                reply_markup=reply_markup,
+            )
+        )
+
+    async def edit_ephemeral_message_media(
+        self,
+        chat_id: int | str,
+        receiver_user_id: int,
+        ephemeral_message_id: int,
+        media: InputMedia,
+        *,
+        reply_markup: Optional[ReplyMarkup] = None,
+    ) -> bool:
+        """Replace the media of an ephemeral message. Returns True on success.
+
+        A new file cannot be uploaded; reference one by file_id or URL.
+        """
+        return bool(
+            await self._call(
+                "editEphemeralMessageMedia",
+                chat_id=chat_id,
+                receiver_user_id=receiver_user_id,
+                ephemeral_message_id=ephemeral_message_id,
+                media=media,
+                reply_markup=reply_markup,
+            )
+        )
+
+    async def edit_ephemeral_message_caption(
+        self,
+        chat_id: int | str,
+        receiver_user_id: int,
+        ephemeral_message_id: int,
+        *,
+        caption: Optional[str] = None,
+        parse_mode: Optional[str] = None,
+        reply_markup: Optional[ReplyMarkup] = None,
+    ) -> bool:
+        """Edit the caption of an ephemeral message. Returns True on success."""
+        return bool(
+            await self._call(
+                "editEphemeralMessageCaption",
+                chat_id=chat_id,
+                receiver_user_id=receiver_user_id,
+                ephemeral_message_id=ephemeral_message_id,
+                caption=caption,
+                parse_mode=parse_mode,
+                reply_markup=reply_markup,
+            )
+        )
+
+    async def edit_ephemeral_message_reply_markup(
+        self,
+        chat_id: int | str,
+        receiver_user_id: int,
+        ephemeral_message_id: int,
+        *,
+        reply_markup: Optional[ReplyMarkup] = None,
+    ) -> bool:
+        """Edit only an ephemeral message's inline keyboard. Returns True."""
+        return bool(
+            await self._call(
+                "editEphemeralMessageReplyMarkup",
+                chat_id=chat_id,
+                receiver_user_id=receiver_user_id,
+                ephemeral_message_id=ephemeral_message_id,
+                reply_markup=reply_markup,
+            )
+        )
+
+    async def delete_ephemeral_message(
+        self,
+        chat_id: int | str,
+        receiver_user_id: int,
+        ephemeral_message_id: int,
+    ) -> bool:
+        """Delete an ephemeral message. Returns True on success."""
+        return bool(
+            await self._call(
+                "deleteEphemeralMessage",
+                chat_id=chat_id,
+                receiver_user_id=receiver_user_id,
+                ephemeral_message_id=ephemeral_message_id,
             )
         )
 
@@ -1847,3 +2053,9 @@ class Bot:
 def _edited(result: Any) -> Message | bool:
     """Parse an editMessage* result: a Message, or True for inline edits."""
     return True if result is True else Message.from_dict(result)
+
+
+def _to_data(value: Any) -> Any:
+    """Serialize a block or media object through to_dict, else pass it through."""
+    to_dict = getattr(value, "to_dict", None)
+    return to_dict() if callable(to_dict) else value

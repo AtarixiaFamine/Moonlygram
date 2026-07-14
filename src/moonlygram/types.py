@@ -180,6 +180,8 @@ class Message:
     invoice: Optional[Invoice] = None
     successful_payment: Optional[SuccessfulPayment] = None
     refunded_payment: Optional[RefundedPayment] = None
+    receiver_user: Optional[User] = None
+    ephemeral_message_id: Optional[int] = None
     raw: dict[str, Any] = field(default_factory=dict, repr=False)
     _bot: "Optional[Bot]" = field(default=None, init=False, repr=False, compare=False)
 
@@ -249,6 +251,10 @@ class Message:
                 if "refunded_payment" in d
                 else None
             ),
+            receiver_user=(
+                User.from_dict(d["receiver_user"]) if "receiver_user" in d else None
+            ),
+            ephemeral_message_id=d.get("ephemeral_message_id"),
             raw=d,
         )
 
@@ -259,6 +265,8 @@ class Message:
             self.from_user.set_bot(bot)
         if self.via_bot is not None:
             self.via_bot.set_bot(bot)
+        if self.receiver_user is not None:
+            self.receiver_user.set_bot(bot)
         if self.reply_to_message is not None:
             self.reply_to_message.set_bot(bot)
         if self.pinned_message is not None:
@@ -888,13 +896,54 @@ class BotCommand:
 
     command: str
     description: str
+    is_ephemeral: Optional[bool] = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {"command": self.command, "description": self.description}
+        d: dict[str, Any] = {"command": self.command, "description": self.description}
+        if self.is_ephemeral is not None:
+            d["is_ephemeral"] = self.is_ephemeral
+        return d
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> "BotCommand":
-        return cls(command=d["command"], description=d["description"])
+        return cls(
+            command=d["command"],
+            description=d["description"],
+            is_ephemeral=d.get("is_ephemeral"),
+        )
+
+
+@dataclass(slots=True)
+class ReplyParameters:
+    """How a sent message replies to an earlier one.
+
+    Pass this as reply_parameters to a send method. Reply to a normal message
+    with message_id, or to an ephemeral message with ephemeral_message_id;
+    exactly one of the two identifies the target. quote_entities, when given,
+    is a list of already-serialized MessageEntity dicts.
+    """
+
+    message_id: Optional[int] = None
+    chat_id: Optional[int | str] = None
+    ephemeral_message_id: Optional[int] = None
+    allow_sending_without_reply: Optional[bool] = None
+    quote: Optional[str] = None
+    quote_parse_mode: Optional[str] = None
+    quote_entities: Optional[list[dict[str, Any]]] = None
+    quote_position: Optional[int] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "message_id": self.message_id,
+            "chat_id": self.chat_id,
+            "ephemeral_message_id": self.ephemeral_message_id,
+            "allow_sending_without_reply": self.allow_sending_without_reply,
+            "quote": self.quote,
+            "quote_parse_mode": self.quote_parse_mode,
+            "quote_entities": self.quote_entities,
+            "quote_position": self.quote_position,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -1035,6 +1084,30 @@ class InputMediaAnimation:
             self.parse_mode,
             width=self.width,
             height=self.height,
+            duration=self.duration,
+        )
+
+
+@dataclass(slots=True)
+class InputMediaVoiceNote:
+    """A voice message to be sent, used inside a rich message.
+
+    Unlike the other InputMedia types this is not part of the InputMedia union
+    accepted by send_media_group or edit_message_media; it appears only in a
+    rich message's media list and in the voice-note rich block.
+    """
+
+    media: str
+    caption: Optional[str] = None
+    parse_mode: Optional[str] = None
+    duration: Optional[int] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return _input_media_dict(
+            "voice_note",
+            self.media,
+            self.caption,
+            self.parse_mode,
             duration=self.duration,
         )
 

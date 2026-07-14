@@ -1,6 +1,6 @@
 """The RichMessage builder and inline-text helpers.
 
-Bot API 10.1 rich messages are described by a small HTML dialect. RichMessage
+Rich messages are described by a small HTML dialect. RichMessage
 assembles the block-level structure (headings, paragraphs, code blocks, tables,
 collapsibles, math, …) and the inline helpers (bold, italic, link, …) compose
 the runs of text inside a block. Everything is escaped as it is added, so plain
@@ -102,7 +102,7 @@ def link(content: InlineContent, url: str) -> Inline:
 
 
 class RichMessage:
-    """A builder for a Bot API 10.1 rich message.
+    """A builder for a rich message.
 
     Each method appends a block and returns self, so calls chain. Inline content
     arguments accept plain strings (escaped automatically) or Inline runs from
