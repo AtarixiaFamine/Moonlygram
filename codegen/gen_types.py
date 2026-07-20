@@ -199,6 +199,17 @@ def render_class(
         lines.append(f"            {py}={expr},")
     lines.append("            raw=d,")
     lines.append("        )")
+
+    # to_dict lets a received object be passed straight back to a send method
+    # (echoing message.entities, for example). Fields set to None are dropped;
+    # Session serializes any nested objects on the way out.
+    lines.append("")
+    lines.append("    def to_dict(self) -> dict[str, Any]:")
+    lines.append("        d: dict[str, Any] = {")
+    for py, api, _types, _required, _ann in field_specs:
+        lines.append(f'            "{api}": self.{py},')
+    lines.append("        }")
+    lines.append("        return {k: v for k, v in d.items() if v is not None}")
     return "\n".join(lines)
 
 

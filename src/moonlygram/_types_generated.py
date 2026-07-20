@@ -42,6 +42,16 @@ class AffiliateInfo:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "commission_per_mille": self.commission_per_mille,
+            "amount": self.amount,
+            "affiliate_user": self.affiliate_user,
+            "affiliate_chat": self.affiliate_chat,
+            "nanostar_amount": self.nanostar_amount,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class Animation:
@@ -74,6 +84,20 @@ class Animation:
             file_size=d.get("file_size"),
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "file_id": self.file_id,
+            "file_unique_id": self.file_unique_id,
+            "width": self.width,
+            "height": self.height,
+            "duration": self.duration,
+            "thumbnail": self.thumbnail,
+            "file_name": self.file_name,
+            "mime_type": self.mime_type,
+            "file_size": self.file_size,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -108,6 +132,20 @@ class Audio:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "file_id": self.file_id,
+            "file_unique_id": self.file_unique_id,
+            "duration": self.duration,
+            "performer": self.performer,
+            "title": self.title,
+            "file_name": self.file_name,
+            "mime_type": self.mime_type,
+            "file_size": self.file_size,
+            "thumbnail": self.thumbnail,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class BotDescription:
@@ -122,6 +160,12 @@ class BotDescription:
             description=d.get("description"),
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "description": self.description,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -138,6 +182,12 @@ class BotName:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "name": self.name,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class BotShortDescription:
@@ -152,6 +202,12 @@ class BotShortDescription:
             short_description=d.get("short_description"),
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "short_description": self.short_description,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -174,6 +230,15 @@ class ChatBoost:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "boost_id": self.boost_id,
+            "add_date": self.add_date,
+            "expiration_date": self.expiration_date,
+            "source": self.source,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class ChatBoostRemoved:
@@ -194,6 +259,15 @@ class ChatBoostRemoved:
             source=ChatBoostSource.from_dict(d["source"]) if "source" in d else None,
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "chat": self.chat,
+            "boost_id": self.boost_id,
+            "remove_date": self.remove_date,
+            "source": self.source,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -220,6 +294,16 @@ class ChatBoostSource:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "source": self.source,
+            "user": self.user,
+            "giveaway_message_id": self.giveaway_message_id,
+            "prize_star_count": self.prize_star_count,
+            "is_unclaimed": self.is_unclaimed,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class ChatBoostUpdated:
@@ -236,6 +320,13 @@ class ChatBoostUpdated:
             boost=ChatBoost.from_dict(d["boost"]) if "boost" in d else None,
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "chat": self.chat,
+            "boost": self.boost,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -271,6 +362,22 @@ class ChatInviteLink:
             subscription_price=d.get("subscription_price"),
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "invite_link": self.invite_link,
+            "creator": self.creator,
+            "creates_join_request": self.creates_join_request,
+            "is_primary": self.is_primary,
+            "is_revoked": self.is_revoked,
+            "name": self.name,
+            "expire_date": self.expire_date,
+            "member_limit": self.member_limit,
+            "pending_join_request_count": self.pending_join_request_count,
+            "subscription_period": self.subscription_period,
+            "subscription_price": self.subscription_price,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -361,6 +468,47 @@ class ChatMember:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "status": self.status,
+            "user": self.user,
+            "is_anonymous": self.is_anonymous,
+            "custom_title": self.custom_title,
+            "can_be_edited": self.can_be_edited,
+            "can_manage_chat": self.can_manage_chat,
+            "can_delete_messages": self.can_delete_messages,
+            "can_manage_video_chats": self.can_manage_video_chats,
+            "can_restrict_members": self.can_restrict_members,
+            "can_promote_members": self.can_promote_members,
+            "can_change_info": self.can_change_info,
+            "can_invite_users": self.can_invite_users,
+            "can_post_stories": self.can_post_stories,
+            "can_edit_stories": self.can_edit_stories,
+            "can_delete_stories": self.can_delete_stories,
+            "can_post_messages": self.can_post_messages,
+            "can_edit_messages": self.can_edit_messages,
+            "can_pin_messages": self.can_pin_messages,
+            "can_manage_topics": self.can_manage_topics,
+            "can_manage_direct_messages": self.can_manage_direct_messages,
+            "can_manage_tags": self.can_manage_tags,
+            "tag": self.tag,
+            "until_date": self.until_date,
+            "is_member": self.is_member,
+            "can_send_messages": self.can_send_messages,
+            "can_send_audios": self.can_send_audios,
+            "can_send_documents": self.can_send_documents,
+            "can_send_photos": self.can_send_photos,
+            "can_send_videos": self.can_send_videos,
+            "can_send_video_notes": self.can_send_video_notes,
+            "can_send_voice_notes": self.can_send_voice_notes,
+            "can_send_polls": self.can_send_polls,
+            "can_send_other_messages": self.can_send_other_messages,
+            "can_add_web_page_previews": self.can_add_web_page_previews,
+            "can_react_to_messages": self.can_react_to_messages,
+            "can_edit_tag": self.can_edit_tag,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class ChatMemberUpdated:
@@ -390,6 +538,19 @@ class ChatMemberUpdated:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "chat": self.chat,
+            "from": self.from_user,
+            "date": self.date,
+            "old_chat_member": self.old_chat_member,
+            "new_chat_member": self.new_chat_member,
+            "invite_link": self.invite_link,
+            "via_join_request": self.via_join_request,
+            "via_chat_folder_invite_link": self.via_chat_folder_invite_link,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class Contact:
@@ -413,6 +574,16 @@ class Contact:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "phone_number": self.phone_number,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "user_id": self.user_id,
+            "vcard": self.vcard,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class Dice:
@@ -429,6 +600,13 @@ class Dice:
             value=d.get("value"),
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "emoji": self.emoji,
+            "value": self.value,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -457,6 +635,17 @@ class Document:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "file_id": self.file_id,
+            "file_unique_id": self.file_unique_id,
+            "thumbnail": self.thumbnail,
+            "file_name": self.file_name,
+            "mime_type": self.mime_type,
+            "file_size": self.file_size,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class File:
@@ -482,6 +671,15 @@ class File:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "file_id": self.file_id,
+            "file_unique_id": self.file_unique_id,
+            "file_size": self.file_size,
+            "file_path": self.file_path,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class ForumTopic:
@@ -505,6 +703,16 @@ class ForumTopic:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "message_thread_id": self.message_thread_id,
+            "name": self.name,
+            "icon_color": self.icon_color,
+            "icon_custom_emoji_id": self.icon_custom_emoji_id,
+            "is_name_implicit": self.is_name_implicit,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class Invoice:
@@ -527,6 +735,16 @@ class Invoice:
             total_amount=d.get("total_amount"),
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "title": self.title,
+            "description": self.description,
+            "start_parameter": self.start_parameter,
+            "currency": self.currency,
+            "total_amount": self.total_amount,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -552,6 +770,17 @@ class Location:
             proximity_alert_radius=d.get("proximity_alert_radius"),
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "horizontal_accuracy": self.horizontal_accuracy,
+            "live_period": self.live_period,
+            "heading": self.heading,
+            "proximity_alert_radius": self.proximity_alert_radius,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -586,6 +815,20 @@ class MessageEntity:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "type": self.type,
+            "offset": self.offset,
+            "length": self.length,
+            "url": self.url,
+            "user": self.user,
+            "language": self.language,
+            "custom_emoji_id": self.custom_emoji_id,
+            "unix_time": self.unix_time,
+            "date_time_format": self.date_time_format,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class MessageId:
@@ -600,6 +843,12 @@ class MessageId:
             message_id=d.get("message_id"),
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "message_id": self.message_id,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -633,6 +882,19 @@ class MessageOrigin:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "type": self.type,
+            "date": self.date,
+            "sender_user": self.sender_user,
+            "sender_user_name": self.sender_user_name,
+            "sender_chat": self.sender_chat,
+            "author_signature": self.author_signature,
+            "chat": self.chat,
+            "message_id": self.message_id,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class MessageReactionCountUpdated:
@@ -653,6 +915,15 @@ class MessageReactionCountUpdated:
             reactions=[ReactionCount.from_dict(i) for i in d["reactions"]] if "reactions" in d else None,
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "chat": self.chat,
+            "message_id": self.message_id,
+            "date": self.date,
+            "reactions": self.reactions,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -681,6 +952,18 @@ class MessageReactionUpdated:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "chat": self.chat,
+            "message_id": self.message_id,
+            "date": self.date,
+            "old_reaction": self.old_reaction,
+            "new_reaction": self.new_reaction,
+            "user": self.user,
+            "actor_chat": self.actor_chat,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class OrderInfo:
@@ -701,6 +984,15 @@ class OrderInfo:
             shipping_address=ShippingAddress.from_dict(d["shipping_address"]) if "shipping_address" in d else None,
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "name": self.name,
+            "phone_number": self.phone_number,
+            "email": self.email,
+            "shipping_address": self.shipping_address,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -724,6 +1016,16 @@ class PhotoSize:
             file_size=d.get("file_size"),
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "file_id": self.file_id,
+            "file_unique_id": self.file_unique_id,
+            "width": self.width,
+            "height": self.height,
+            "file_size": self.file_size,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -780,6 +1082,32 @@ class Poll:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "id": self.id,
+            "question": self.question,
+            "options": self.options,
+            "total_voter_count": self.total_voter_count,
+            "is_closed": self.is_closed,
+            "is_anonymous": self.is_anonymous,
+            "type": self.type,
+            "allows_multiple_answers": self.allows_multiple_answers,
+            "allows_revoting": self.allows_revoting,
+            "members_only": self.members_only,
+            "question_entities": self.question_entities,
+            "country_codes": self.country_codes,
+            "correct_option_ids": self.correct_option_ids,
+            "explanation": self.explanation,
+            "explanation_entities": self.explanation_entities,
+            "explanation_media": self.explanation_media,
+            "open_period": self.open_period,
+            "close_date": self.close_date,
+            "description": self.description,
+            "description_entities": self.description_entities,
+            "media": self.media,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class PollAnswer:
@@ -802,6 +1130,16 @@ class PollAnswer:
             user=User.from_dict(d["user"]) if "user" in d else None,
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "poll_id": self.poll_id,
+            "option_ids": self.option_ids,
+            "option_persistent_ids": self.option_persistent_ids,
+            "voter_chat": self.voter_chat,
+            "user": self.user,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -832,6 +1170,19 @@ class PollOption:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "persistent_id": self.persistent_id,
+            "text": self.text,
+            "voter_count": self.voter_count,
+            "text_entities": self.text_entities,
+            "media": self.media,
+            "added_by_user": self.added_by_user,
+            "added_by_chat": self.added_by_chat,
+            "addition_date": self.addition_date,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class ReactionCount:
@@ -850,6 +1201,13 @@ class ReactionCount:
             total_count=d.get("total_count"),
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "type": self.type,
+            "total_count": self.total_count,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -874,6 +1232,16 @@ class RefundedPayment:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "currency": self.currency,
+            "total_amount": self.total_amount,
+            "invoice_payload": self.invoice_payload,
+            "telegram_payment_charge_id": self.telegram_payment_charge_id,
+            "provider_payment_charge_id": self.provider_payment_charge_id,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class RevenueWithdrawalState:
@@ -896,6 +1264,14 @@ class RevenueWithdrawalState:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "type": self.type,
+            "date": self.date,
+            "url": self.url,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class SentWebAppMessage:
@@ -910,6 +1286,12 @@ class SentWebAppMessage:
             inline_message_id=d.get("inline_message_id"),
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "inline_message_id": self.inline_message_id,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -936,6 +1318,17 @@ class ShippingAddress:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "country_code": self.country_code,
+            "state": self.state,
+            "city": self.city,
+            "street_line1": self.street_line1,
+            "street_line2": self.street_line2,
+            "post_code": self.post_code,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class StarAmount:
@@ -952,6 +1345,13 @@ class StarAmount:
             nanostar_amount=d.get("nanostar_amount"),
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "amount": self.amount,
+            "nanostar_amount": self.nanostar_amount,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -982,6 +1382,17 @@ class StarTransaction:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "id": self.id,
+            "amount": self.amount,
+            "date": self.date,
+            "nanostar_amount": self.nanostar_amount,
+            "source": self.source,
+            "receiver": self.receiver,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class StarTransactions:
@@ -996,6 +1407,12 @@ class StarTransactions:
             transactions=[StarTransaction.from_dict(i) for i in d["transactions"]] if "transactions" in d else None,
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "transactions": self.transactions,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -1040,6 +1457,26 @@ class Sticker:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "file_id": self.file_id,
+            "file_unique_id": self.file_unique_id,
+            "type": self.type,
+            "width": self.width,
+            "height": self.height,
+            "is_animated": self.is_animated,
+            "is_video": self.is_video,
+            "thumbnail": self.thumbnail,
+            "emoji": self.emoji,
+            "set_name": self.set_name,
+            "premium_animation": self.premium_animation,
+            "mask_position": self.mask_position,
+            "custom_emoji_id": self.custom_emoji_id,
+            "needs_repainting": self.needs_repainting,
+            "file_size": self.file_size,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class StickerSet:
@@ -1062,6 +1499,16 @@ class StickerSet:
             thumbnail=PhotoSize.from_dict(d["thumbnail"]) if "thumbnail" in d else None,
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "name": self.name,
+            "title": self.title,
+            "sticker_type": self.sticker_type,
+            "stickers": self.stickers,
+            "thumbnail": self.thumbnail,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -1099,6 +1546,21 @@ class SuccessfulPayment:
             order_info=OrderInfo.from_dict(d["order_info"]) if "order_info" in d else None,
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "currency": self.currency,
+            "total_amount": self.total_amount,
+            "invoice_payload": self.invoice_payload,
+            "telegram_payment_charge_id": self.telegram_payment_charge_id,
+            "provider_payment_charge_id": self.provider_payment_charge_id,
+            "subscription_expiration_date": self.subscription_expiration_date,
+            "is_recurring": self.is_recurring,
+            "is_first_recurring": self.is_first_recurring,
+            "shipping_option_id": self.shipping_option_id,
+            "order_info": self.order_info,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -1148,6 +1610,26 @@ class TransactionPartner:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "type": self.type,
+            "transaction_type": self.transaction_type,
+            "user": self.user,
+            "affiliate": self.affiliate,
+            "invoice_payload": self.invoice_payload,
+            "subscription_period": self.subscription_period,
+            "paid_media": self.paid_media,
+            "paid_media_payload": self.paid_media_payload,
+            "gift": self.gift,
+            "premium_subscription_duration": self.premium_subscription_duration,
+            "chat": self.chat,
+            "sponsor_user": self.sponsor_user,
+            "commission_per_mille": self.commission_per_mille,
+            "withdrawal_state": self.withdrawal_state,
+            "request_count": self.request_count,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class UserChatBoosts:
@@ -1162,6 +1644,12 @@ class UserChatBoosts:
             boosts=[ChatBoost.from_dict(i) for i in d["boosts"]] if "boosts" in d else None,
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "boosts": self.boosts,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -1179,6 +1667,13 @@ class UserProfilePhotos:
             photos=[[PhotoSize.from_dict(j) for j in i] for i in d["photos"]] if "photos" in d else None,
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "total_count": self.total_count,
+            "photos": self.photos,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -1206,6 +1701,18 @@ class Venue:
             google_place_type=d.get("google_place_type"),
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "location": self.location,
+            "title": self.title,
+            "address": self.address,
+            "foursquare_id": self.foursquare_id,
+            "foursquare_type": self.foursquare_type,
+            "google_place_id": self.google_place_id,
+            "google_place_type": self.google_place_type,
+        }
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -1244,6 +1751,23 @@ class Video:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "file_id": self.file_id,
+            "file_unique_id": self.file_unique_id,
+            "width": self.width,
+            "height": self.height,
+            "duration": self.duration,
+            "thumbnail": self.thumbnail,
+            "cover": self.cover,
+            "start_timestamp": self.start_timestamp,
+            "qualities": self.qualities,
+            "file_name": self.file_name,
+            "mime_type": self.mime_type,
+            "file_size": self.file_size,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class VideoNote:
@@ -1271,6 +1795,17 @@ class VideoNote:
             raw=d,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "file_id": self.file_id,
+            "file_unique_id": self.file_unique_id,
+            "length": self.length,
+            "duration": self.duration,
+            "thumbnail": self.thumbnail,
+            "file_size": self.file_size,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
 
 @dataclass(slots=True)
 class Voice:
@@ -1293,3 +1828,13 @@ class Voice:
             file_size=d.get("file_size"),
             raw=d,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "file_id": self.file_id,
+            "file_unique_id": self.file_unique_id,
+            "duration": self.duration,
+            "mime_type": self.mime_type,
+            "file_size": self.file_size,
+        }
+        return {k: v for k, v in d.items() if v is not None}

@@ -28,7 +28,13 @@ class TestContentSends:
         await bot.send_poll(1, "Pick", ["a", "b"], is_anonymous=False)
         method, params = session.calls[-1]
         assert method == "sendPoll"
-        assert params == {"chat_id": 1, "question": "Pick", "options": ["a", "b"], "is_anonymous": False}
+        # plain option strings go out in the InputPollOption shape
+        assert params == {
+            "chat_id": 1,
+            "question": "Pick",
+            "options": [{"text": "a"}, {"text": "b"}],
+            "is_anonymous": False,
+        }
 
     async def test_send_sticker_with_file_id(self):
         bot, session = fake_bot(_MESSAGE_DICT)

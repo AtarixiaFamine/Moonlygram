@@ -84,14 +84,23 @@ class Session:
 
 
 def _serialize(value: Any) -> Any:
-    """Convert a value with a to_dict() method to its dict form, else pass through."""
+    """Convert a value to its JSON form, recursing through lists and dicts.
+
+    Anything with a to_dict() method is serialized through it. Lists and dicts
+    are walked so that a list of objects (message entities, media items) works
+    the same as a single one.
+    """
     to_dict = getattr(value, "to_dict", None)
-    return to_dict() if callable(to_dict) else value
+    if callable(to_dict):
+        return _serialize(to_dict())
+    if isinstance(value, list):
+        return [_serialize(v) for v in value]
+    if isinstance(value, dict):
+        return {k: _serialize(v) for k, v in value.items()}
+    return value
 
 
 def _to_form(value: Any) -> str:
     """Render a non-file value as a multipart form field (JSON unless a string)."""
-    to_dict = getattr(value, "to_dict", None)
-    if callable(to_dict):
-        value = to_dict()
+    value = _serialize(value)
     return value if isinstance(value, str) else json.dumps(value)

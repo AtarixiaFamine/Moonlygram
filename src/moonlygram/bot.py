@@ -6,7 +6,7 @@ drives it.
 """
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from typing import TYPE_CHECKING, Any, Optional, Protocol, cast
 
 from .defaults import Defaults
@@ -26,12 +26,16 @@ from .types import (
     ForumTopic,
     InlineQueryResult,
     InputMedia,
+    InputPollMedia,
     InputSticker,
     LabeledPrice,
+    LinkPreviewOptions,
     MaskPosition,
     Message,
+    MessageEntity,
     MessageId,
     Poll,
+    PollOptionInput,
     ReactionType,
     ReplyMarkup,
     SentWebAppMessage,
@@ -40,6 +44,7 @@ from .types import (
     StarTransactions,
     Sticker,
     StickerSet,
+    SuggestedPostParameters,
     User,
     UserChatBoosts,
     UserProfilePhotos,
@@ -142,20 +147,45 @@ class Bot:
         chat_id: int | str,
         text: str,
         *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
         parse_mode: Optional[str] = None,
+        entities: Optional[list[MessageEntity]] = None,
+        link_preview_options: Optional[LinkPreviewOptions] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_to_message_id: Optional[int] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         receiver_user_id: Optional[int] = None,
         callback_query_id: Optional[str] = None,
         reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
-        """Send a text message to a chat."""
+        """Send a text message to a chat.
+
+        message_thread_id targets a topic in a forum supergroup. Pass entities
+        instead of parse_mode to supply formatting directly, and
+        link_preview_options to change or suppress the link preview.
+        """
         return Message.from_dict(
             await self._call(
                 "sendMessage",
                 chat_id=chat_id,
                 text=text,
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
                 parse_mode=parse_mode,
+                entities=entities,
+                link_preview_options=link_preview_options,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
                 reply_to_message_id=reply_to_message_id,
                 reply_markup=reply_markup,
                 receiver_user_id=receiver_user_id,
@@ -200,6 +230,16 @@ class Bot:
         markdown: Optional[str] = None,
         blocks: "Optional[list[InputRichBlock]]" = None,
         media: "Optional[list[InputRichMessageMedia]]" = None,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
+        reply_markup: Optional[ReplyMarkup] = None,
     ) -> Message:
         """Send a rich message.
 
@@ -213,6 +253,16 @@ class Bot:
                 "sendRichMessage",
                 chat_id=chat_id,
                 rich_message=self._rich_message(html, markdown, blocks, media),
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
+                reply_parameters=reply_parameters,
+                reply_markup=reply_markup,
             )
         )
 
@@ -225,6 +275,7 @@ class Bot:
         markdown: Optional[str] = None,
         blocks: "Optional[list[InputRichBlock]]" = None,
         media: "Optional[list[InputRichMessageMedia]]" = None,
+        message_thread_id: Optional[int] = None,
     ) -> bool:
         """Send an ephemeral rich-message draft (about a 30s TTL).
 
@@ -238,6 +289,7 @@ class Bot:
                 chat_id=chat_id,
                 draft_id=draft_id,
                 rich_message=self._rich_message(html, markdown, blocks, media),
+                message_thread_id=message_thread_id,
             )
         )
 
@@ -246,8 +298,19 @@ class Bot:
         chat_id: int | str,
         photo: FileInput,
         *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
         caption: Optional[str] = None,
         parse_mode: Optional[str] = None,
+        caption_entities: Optional[list[MessageEntity]] = None,
+        show_caption_above_media: Optional[bool] = None,
+        has_spoiler: Optional[bool] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
         receiver_user_id: Optional[int] = None,
@@ -260,8 +323,19 @@ class Bot:
                 "sendPhoto",
                 chat_id=chat_id,
                 photo=photo,
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
                 caption=caption,
                 parse_mode=parse_mode,
+                caption_entities=caption_entities,
+                show_caption_above_media=show_caption_above_media,
+                has_spoiler=has_spoiler,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
                 receiver_user_id=receiver_user_id,
@@ -275,8 +349,19 @@ class Bot:
         chat_id: int | str,
         document: FileInput,
         *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
+        thumbnail: Optional[FileInput] = None,
         caption: Optional[str] = None,
         parse_mode: Optional[str] = None,
+        caption_entities: Optional[list[MessageEntity]] = None,
+        disable_content_type_detection: Optional[bool] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
         receiver_user_id: Optional[int] = None,
@@ -289,8 +374,19 @@ class Bot:
                 "sendDocument",
                 chat_id=chat_id,
                 document=document,
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
+                thumbnail=thumbnail,
                 caption=caption,
                 parse_mode=parse_mode,
+                caption_entities=caption_entities,
+                disable_content_type_detection=disable_content_type_detection,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
                 receiver_user_id=receiver_user_id,
@@ -304,8 +400,21 @@ class Bot:
         chat_id: int | str,
         audio: FileInput,
         *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
         caption: Optional[str] = None,
         parse_mode: Optional[str] = None,
+        caption_entities: Optional[list[MessageEntity]] = None,
+        duration: Optional[int] = None,
+        performer: Optional[str] = None,
+        title: Optional[str] = None,
+        thumbnail: Optional[FileInput] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
         receiver_user_id: Optional[int] = None,
@@ -318,8 +427,21 @@ class Bot:
                 "sendAudio",
                 chat_id=chat_id,
                 audio=audio,
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
                 caption=caption,
                 parse_mode=parse_mode,
+                caption_entities=caption_entities,
+                duration=duration,
+                performer=performer,
+                title=title,
+                thumbnail=thumbnail,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
                 receiver_user_id=receiver_user_id,
@@ -333,22 +455,62 @@ class Bot:
         chat_id: int | str,
         video: FileInput,
         *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
+        duration: Optional[int] = None,
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        thumbnail: Optional[FileInput] = None,
+        cover: Optional[FileInput] = None,
+        start_timestamp: Optional[int] = None,
         caption: Optional[str] = None,
         parse_mode: Optional[str] = None,
+        caption_entities: Optional[list[MessageEntity]] = None,
+        show_caption_above_media: Optional[bool] = None,
+        has_spoiler: Optional[bool] = None,
+        supports_streaming: Optional[bool] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
         receiver_user_id: Optional[int] = None,
         callback_query_id: Optional[str] = None,
         reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
-        """Send a video file."""
+        """Send a video file.
+
+        cover sets the thumbnail shown before playback starts, and
+        start_timestamp the second the video should open at.
+        """
         return Message.from_dict(
             await self._call(
                 "sendVideo",
                 chat_id=chat_id,
                 video=video,
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
+                duration=duration,
+                width=width,
+                height=height,
+                thumbnail=thumbnail,
+                cover=cover,
+                start_timestamp=start_timestamp,
                 caption=caption,
                 parse_mode=parse_mode,
+                caption_entities=caption_entities,
+                show_caption_above_media=show_caption_above_media,
+                has_spoiler=has_spoiler,
+                supports_streaming=supports_streaming,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
                 receiver_user_id=receiver_user_id,
@@ -362,8 +524,23 @@ class Bot:
         chat_id: int | str,
         animation: FileInput,
         *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
+        duration: Optional[int] = None,
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        thumbnail: Optional[FileInput] = None,
         caption: Optional[str] = None,
         parse_mode: Optional[str] = None,
+        caption_entities: Optional[list[MessageEntity]] = None,
+        show_caption_above_media: Optional[bool] = None,
+        has_spoiler: Optional[bool] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
         receiver_user_id: Optional[int] = None,
@@ -376,8 +553,23 @@ class Bot:
                 "sendAnimation",
                 chat_id=chat_id,
                 animation=animation,
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
+                duration=duration,
+                width=width,
+                height=height,
+                thumbnail=thumbnail,
                 caption=caption,
                 parse_mode=parse_mode,
+                caption_entities=caption_entities,
+                show_caption_above_media=show_caption_above_media,
+                has_spoiler=has_spoiler,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
                 receiver_user_id=receiver_user_id,
@@ -391,8 +583,18 @@ class Bot:
         chat_id: int | str,
         voice: FileInput,
         *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
         caption: Optional[str] = None,
         parse_mode: Optional[str] = None,
+        caption_entities: Optional[list[MessageEntity]] = None,
+        duration: Optional[int] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
         receiver_user_id: Optional[int] = None,
@@ -405,8 +607,18 @@ class Bot:
                 "sendVoice",
                 chat_id=chat_id,
                 voice=voice,
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
                 caption=caption,
                 parse_mode=parse_mode,
+                caption_entities=caption_entities,
+                duration=duration,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
                 receiver_user_id=receiver_user_id,
@@ -420,6 +632,17 @@ class Bot:
         chat_id: int | str,
         video_note: FileInput,
         *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
+        duration: Optional[int] = None,
+        length: Optional[int] = None,
+        thumbnail: Optional[FileInput] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
         receiver_user_id: Optional[int] = None,
@@ -432,6 +655,17 @@ class Bot:
                 "sendVideoNote",
                 chat_id=chat_id,
                 video_note=video_note,
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
+                duration=duration,
+                length=length,
+                thumbnail=thumbnail,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
                 receiver_user_id=receiver_user_id,
@@ -445,6 +679,15 @@ class Bot:
         chat_id: int | str,
         sticker: FileInput,
         *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
+        emoji: Optional[str] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
         receiver_user_id: Optional[int] = None,
@@ -457,6 +700,15 @@ class Bot:
                 "sendSticker",
                 chat_id=chat_id,
                 sticker=sticker,
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
+                emoji=emoji,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
                 receiver_user_id=receiver_user_id,
@@ -471,21 +723,47 @@ class Bot:
         latitude: float,
         longitude: float,
         *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
         horizontal_accuracy: Optional[float] = None,
+        live_period: Optional[int] = None,
+        heading: Optional[int] = None,
+        proximity_alert_radius: Optional[int] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
         receiver_user_id: Optional[int] = None,
         callback_query_id: Optional[str] = None,
         reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
-        """Send a point on the map."""
+        """Send a point on the map.
+
+        Pass live_period to send a live location that updates for that many
+        seconds; edit_message_live_location then moves it.
+        """
         return Message.from_dict(
             await self._call(
                 "sendLocation",
                 chat_id=chat_id,
                 latitude=latitude,
                 longitude=longitude,
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
                 horizontal_accuracy=horizontal_accuracy,
+                live_period=live_period,
+                heading=heading,
+                proximity_alert_radius=proximity_alert_radius,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
                 receiver_user_id=receiver_user_id,
@@ -500,7 +778,16 @@ class Bot:
         phone_number: str,
         first_name: str,
         *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
         last_name: Optional[str] = None,
+        vcard: Optional[str] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
         receiver_user_id: Optional[int] = None,
@@ -514,7 +801,16 @@ class Bot:
                 chat_id=chat_id,
                 phone_number=phone_number,
                 first_name=first_name,
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
                 last_name=last_name,
+                vcard=vcard,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
                 receiver_user_id=receiver_user_id,
@@ -527,26 +823,86 @@ class Bot:
         self,
         chat_id: int | str,
         question: str,
-        options: list[str],
+        options: Sequence[PollOptionInput],
         *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        question_parse_mode: Optional[str] = None,
+        question_entities: Optional[list[MessageEntity]] = None,
         is_anonymous: Optional[bool] = None,
         type: Optional[str] = None,
         allows_multiple_answers: Optional[bool] = None,
+        allows_revoting: Optional[bool] = None,
+        shuffle_options: Optional[bool] = None,
+        allow_adding_options: Optional[bool] = None,
+        hide_results_until_closes: Optional[bool] = None,
+        members_only: Optional[bool] = None,
+        country_codes: Optional[list[str]] = None,
+        correct_option_ids: Optional[list[int]] = None,
+        explanation: Optional[str] = None,
+        explanation_parse_mode: Optional[str] = None,
+        explanation_entities: Optional[list[MessageEntity]] = None,
+        explanation_media: Optional[InputPollMedia] = None,
+        open_period: Optional[int] = None,
+        close_date: Optional[int] = None,
+        is_closed: Optional[bool] = None,
+        description: Optional[str] = None,
+        description_parse_mode: Optional[str] = None,
+        description_entities: Optional[list[MessageEntity]] = None,
+        media: Optional[InputPollMedia] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
-        """Send a native poll."""
+        """Send a native poll.
+
+        Each option is either plain text or an InputPollOption when it needs
+        its own formatting. For a quiz, set type to "quiz" and name the right
+        answers with correct_option_ids.
+        """
         return Message.from_dict(
             await self._call(
                 "sendPoll",
                 chat_id=chat_id,
                 question=question,
-                options=options,
+                # plain strings become the InputPollOption shape the API wants
+                options=[{"text": o} if isinstance(o, str) else o for o in options],
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
+                question_parse_mode=question_parse_mode,
+                question_entities=question_entities,
                 is_anonymous=is_anonymous,
                 type=type,
                 allows_multiple_answers=allows_multiple_answers,
+                allows_revoting=allows_revoting,
+                shuffle_options=shuffle_options,
+                allow_adding_options=allow_adding_options,
+                hide_results_until_closes=hide_results_until_closes,
+                members_only=members_only,
+                country_codes=country_codes,
+                correct_option_ids=correct_option_ids,
+                explanation=explanation,
+                explanation_parse_mode=explanation_parse_mode,
+                explanation_entities=explanation_entities,
+                explanation_media=explanation_media,
+                open_period=open_period,
+                close_date=close_date,
+                is_closed=is_closed,
+                description=description,
+                description_parse_mode=description_parse_mode,
+                description_entities=description_entities,
+                media=media,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
+                reply_parameters=reply_parameters,
             )
         )
 
@@ -554,18 +910,36 @@ class Bot:
         self,
         chat_id: int | str,
         *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
         emoji: Optional[str] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send an animated dice (or other emoji) with a random value."""
         return Message.from_dict(
             await self._call(
                 "sendDice",
                 chat_id=chat_id,
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
                 emoji=emoji,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
+                reply_parameters=reply_parameters,
             )
         )
 
@@ -574,6 +948,7 @@ class Bot:
         chat_id: int | str,
         message_id: int,
         *,
+        business_connection_id: Optional[str] = None,
         reply_markup: Optional[ReplyMarkup] = None,
     ) -> Poll:
         """Stop an active poll and return its final state."""
@@ -582,6 +957,7 @@ class Bot:
                 "stopPoll",
                 chat_id=chat_id,
                 message_id=message_id,
+                business_connection_id=business_connection_id,
                 reply_markup=reply_markup,
             )
         )
@@ -594,6 +970,18 @@ class Bot:
         title: str,
         address: str,
         *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
+        foursquare_id: Optional[str] = None,
+        foursquare_type: Optional[str] = None,
+        google_place_id: Optional[str] = None,
+        google_place_type: Optional[str] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
         receiver_user_id: Optional[int] = None,
@@ -609,6 +997,18 @@ class Bot:
                 longitude=longitude,
                 title=title,
                 address=address,
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
+                foursquare_id=foursquare_id,
+                foursquare_type=foursquare_type,
+                google_place_id=google_place_id,
+                google_place_type=google_place_type,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
                 receiver_user_id=receiver_user_id,
@@ -622,16 +1022,30 @@ class Bot:
         chat_id: int | str,
         media: list[InputMedia],
         *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
         disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
         reply_to_message_id: Optional[int] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> list[Message]:
         """Send a group of photos, videos, documents, or audios as an album."""
         result = await self._call(
             "sendMediaGroup",
             chat_id=chat_id,
-            media=[m.to_dict() if hasattr(m, "to_dict") else m for m in media],
+            media=media,
+            business_connection_id=business_connection_id,
+            message_thread_id=message_thread_id,
+            direct_messages_topic_id=direct_messages_topic_id,
             disable_notification=disable_notification,
+            protect_content=protect_content,
+            allow_paid_broadcast=allow_paid_broadcast,
+            message_effect_id=message_effect_id,
             reply_to_message_id=reply_to_message_id,
+            reply_parameters=reply_parameters,
         )
         return [Message.from_dict(m) for m in result]
 
@@ -639,6 +1053,7 @@ class Bot:
         self,
         media: InputMedia,
         *,
+        business_connection_id: Optional[str] = None,
         chat_id: Optional[int | str] = None,
         message_id: Optional[int] = None,
         inline_message_id: Optional[str] = None,
@@ -649,6 +1064,7 @@ class Bot:
             await self._call(
                 "editMessageMedia",
                 media=media,
+                business_connection_id=business_connection_id,
                 chat_id=chat_id,
                 message_id=message_id,
                 inline_message_id=inline_message_id,
@@ -661,9 +1077,14 @@ class Bot:
         latitude: float,
         longitude: float,
         *,
+        business_connection_id: Optional[str] = None,
         chat_id: Optional[int | str] = None,
         message_id: Optional[int] = None,
         inline_message_id: Optional[str] = None,
+        live_period: Optional[int] = None,
+        horizontal_accuracy: Optional[float] = None,
+        heading: Optional[int] = None,
+        proximity_alert_radius: Optional[int] = None,
         reply_markup: Optional[ReplyMarkup] = None,
     ) -> Message | bool:
         """Update a live location message; True for inline messages."""
@@ -672,9 +1093,14 @@ class Bot:
                 "editMessageLiveLocation",
                 latitude=latitude,
                 longitude=longitude,
+                business_connection_id=business_connection_id,
                 chat_id=chat_id,
                 message_id=message_id,
                 inline_message_id=inline_message_id,
+                live_period=live_period,
+                horizontal_accuracy=horizontal_accuracy,
+                heading=heading,
+                proximity_alert_radius=proximity_alert_radius,
                 reply_markup=reply_markup,
             )
         )
@@ -682,6 +1108,7 @@ class Bot:
     async def stop_message_live_location(
         self,
         *,
+        business_connection_id: Optional[str] = None,
         chat_id: Optional[int | str] = None,
         message_id: Optional[int] = None,
         inline_message_id: Optional[str] = None,
@@ -691,6 +1118,7 @@ class Bot:
         return _edited(
             await self._call(
                 "stopMessageLiveLocation",
+                business_connection_id=business_connection_id,
                 chat_id=chat_id,
                 message_id=message_id,
                 inline_message_id=inline_message_id,
@@ -704,7 +1132,10 @@ class Bot:
         from_chat_id: int | str,
         message_ids: list[int],
         *,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
         disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
     ) -> list[MessageId]:
         """Forward several messages at once."""
         result = await self._call(
@@ -712,7 +1143,10 @@ class Bot:
             chat_id=chat_id,
             from_chat_id=from_chat_id,
             message_ids=message_ids,
+            message_thread_id=message_thread_id,
+            direct_messages_topic_id=direct_messages_topic_id,
             disable_notification=disable_notification,
+            protect_content=protect_content,
         )
         return [MessageId.from_dict(m) for m in result]
 
@@ -722,7 +1156,10 @@ class Bot:
         from_chat_id: int | str,
         message_ids: list[int],
         *,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
         disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
         remove_caption: Optional[bool] = None,
     ) -> list[MessageId]:
         """Copy several messages at once without a forward header."""
@@ -731,7 +1168,10 @@ class Bot:
             chat_id=chat_id,
             from_chat_id=from_chat_id,
             message_ids=message_ids,
+            message_thread_id=message_thread_id,
+            direct_messages_topic_id=direct_messages_topic_id,
             disable_notification=disable_notification,
+            protect_content=protect_content,
             remove_caption=remove_caption,
         )
         return [MessageId.from_dict(m) for m in result]
@@ -758,11 +1198,7 @@ class Bot:
                 "setMessageReaction",
                 chat_id=chat_id,
                 message_id=message_id,
-                reaction=(
-                    [r.to_dict() if hasattr(r, "to_dict") else r for r in reaction]
-                    if reaction is not None
-                    else None
-                ),
+                reaction=reaction,
                 is_big=is_big,
             )
         )
@@ -779,16 +1215,24 @@ class Bot:
         self,
         url: str,
         *,
+        certificate: Optional[FileInput] = None,
+        ip_address: Optional[str] = None,
         secret_token: Optional[str] = None,
         allowed_updates: Optional[list[str]] = None,
         drop_pending_updates: Optional[bool] = None,
         max_connections: Optional[int] = None,
     ) -> bool:
-        """Register a webhook URL for Telegram to deliver updates to."""
+        """Register a webhook URL for Telegram to deliver updates to.
+
+        certificate uploads a self-signed public key so Telegram will trust the
+        endpoint, and ip_address pins delivery to a fixed address.
+        """
         return bool(
             await self._call(
                 "setWebhook",
                 url=url,
+                certificate=certificate,
+                ip_address=ip_address,
                 secret_token=secret_token,
                 allowed_updates=allowed_updates,
                 drop_pending_updates=drop_pending_updates,
@@ -814,7 +1258,13 @@ class Bot:
         from_chat_id: int | str,
         message_id: int,
         *,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
+        video_start_timestamp: Optional[int] = None,
         disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
     ) -> Message:
         """Forward a message from one chat to another."""
         return Message.from_dict(
@@ -823,7 +1273,13 @@ class Bot:
                 chat_id=chat_id,
                 from_chat_id=from_chat_id,
                 message_id=message_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
+                video_start_timestamp=video_start_timestamp,
                 disable_notification=disable_notification,
+                protect_content=protect_content,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
             )
         )
 
@@ -833,8 +1289,19 @@ class Bot:
         from_chat_id: int | str,
         message_id: int,
         *,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
+        video_start_timestamp: Optional[int] = None,
         caption: Optional[str] = None,
         parse_mode: Optional[str] = None,
+        caption_entities: Optional[list[MessageEntity]] = None,
+        show_caption_above_media: Optional[bool] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
         reply_markup: Optional[ReplyMarkup] = None,
     ) -> MessageId:
         """Copy a message without a forward header, returning the new id."""
@@ -844,8 +1311,19 @@ class Bot:
                 chat_id=chat_id,
                 from_chat_id=from_chat_id,
                 message_id=message_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
+                video_start_timestamp=video_start_timestamp,
                 caption=caption,
                 parse_mode=parse_mode,
+                caption_entities=caption_entities,
+                show_caption_above_media=show_caption_above_media,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
+                reply_parameters=reply_parameters,
                 reply_markup=reply_markup,
             )
         )
@@ -854,21 +1332,61 @@ class Bot:
         self,
         text: str,
         *,
+        business_connection_id: Optional[str] = None,
         chat_id: Optional[int | str] = None,
         message_id: Optional[int] = None,
         inline_message_id: Optional[str] = None,
         parse_mode: Optional[str] = None,
+        entities: Optional[list[MessageEntity]] = None,
+        link_preview_options: Optional[LinkPreviewOptions] = None,
         reply_markup: Optional[ReplyMarkup] = None,
     ) -> Message | bool:
-        """Edit the text of a message; returns True for inline messages."""
+        """Edit the text of a message; returns True for inline messages.
+
+        To replace the text with rich content instead, use
+        edit_rich_message_text.
+        """
         return _edited(
             await self._call(
                 "editMessageText",
                 text=text,
+                business_connection_id=business_connection_id,
                 chat_id=chat_id,
                 message_id=message_id,
                 inline_message_id=inline_message_id,
                 parse_mode=parse_mode,
+                entities=entities,
+                link_preview_options=link_preview_options,
+                reply_markup=reply_markup,
+            )
+        )
+
+    async def edit_rich_message_text(
+        self,
+        *,
+        html: "Optional[str | RichMessage]" = None,
+        markdown: Optional[str] = None,
+        blocks: "Optional[list[InputRichBlock]]" = None,
+        media: "Optional[list[InputRichMessageMedia]]" = None,
+        business_connection_id: Optional[str] = None,
+        chat_id: Optional[int | str] = None,
+        message_id: Optional[int] = None,
+        inline_message_id: Optional[str] = None,
+        reply_markup: Optional[ReplyMarkup] = None,
+    ) -> Message | bool:
+        """Replace a message's text with rich content; True for inline messages.
+
+        Takes the same html / markdown / blocks forms as send_rich_message: pass
+        exactly one of them.
+        """
+        return _edited(
+            await self._call(
+                "editMessageText",
+                rich_message=self._rich_message(html, markdown, blocks, media),
+                business_connection_id=business_connection_id,
+                chat_id=chat_id,
+                message_id=message_id,
+                inline_message_id=inline_message_id,
                 reply_markup=reply_markup,
             )
         )
@@ -877,10 +1395,13 @@ class Bot:
         self,
         *,
         caption: Optional[str] = None,
+        business_connection_id: Optional[str] = None,
         chat_id: Optional[int | str] = None,
         message_id: Optional[int] = None,
         inline_message_id: Optional[str] = None,
         parse_mode: Optional[str] = None,
+        caption_entities: Optional[list[MessageEntity]] = None,
+        show_caption_above_media: Optional[bool] = None,
         reply_markup: Optional[ReplyMarkup] = None,
     ) -> Message | bool:
         """Edit a message's caption; returns True for inline messages."""
@@ -888,10 +1409,13 @@ class Bot:
             await self._call(
                 "editMessageCaption",
                 caption=caption,
+                business_connection_id=business_connection_id,
                 chat_id=chat_id,
                 message_id=message_id,
                 inline_message_id=inline_message_id,
                 parse_mode=parse_mode,
+                caption_entities=caption_entities,
+                show_caption_above_media=show_caption_above_media,
                 reply_markup=reply_markup,
             )
         )
@@ -899,6 +1423,7 @@ class Bot:
     async def edit_message_reply_markup(
         self,
         *,
+        business_connection_id: Optional[str] = None,
         chat_id: Optional[int | str] = None,
         message_id: Optional[int] = None,
         inline_message_id: Optional[str] = None,
@@ -908,6 +1433,7 @@ class Bot:
         return _edited(
             await self._call(
                 "editMessageReplyMarkup",
+                business_connection_id=business_connection_id,
                 chat_id=chat_id,
                 message_id=message_id,
                 inline_message_id=inline_message_id,
@@ -1036,6 +1562,7 @@ class Bot:
         chat_id: int | str,
         message_id: int,
         *,
+        business_connection_id: Optional[str] = None,
         disable_notification: Optional[bool] = None,
     ) -> bool:
         """Pin a message in a chat."""
@@ -1044,6 +1571,7 @@ class Bot:
                 "pinChatMessage",
                 chat_id=chat_id,
                 message_id=message_id,
+                business_connection_id=business_connection_id,
                 disable_notification=disable_notification,
             )
         )
@@ -1052,12 +1580,16 @@ class Bot:
         self,
         chat_id: int | str,
         *,
+        business_connection_id: Optional[str] = None,
         message_id: Optional[int] = None,
     ) -> bool:
         """Unpin a message, or the most recent pinned one if id is omitted."""
         return bool(
             await self._call(
-                "unpinChatMessage", chat_id=chat_id, message_id=message_id
+                "unpinChatMessage",
+                chat_id=chat_id,
+                business_connection_id=business_connection_id,
+                message_id=message_id,
             )
         )
 
@@ -1067,11 +1599,22 @@ class Bot:
             await self._call("unpinAllChatMessages", chat_id=chat_id)
         )
 
-    async def send_chat_action(self, chat_id: int | str, action: str) -> bool:
+    async def send_chat_action(
+        self,
+        chat_id: int | str,
+        action: str,
+        *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+    ) -> bool:
         """Show a status such as "typing" or "upload_photo" in a chat."""
         return bool(
             await self._call(
-                "sendChatAction", chat_id=chat_id, action=action
+                "sendChatAction",
+                chat_id=chat_id,
+                action=action,
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
             )
         )
 
@@ -1138,6 +1681,7 @@ class Bot:
         user_id: int,
         permissions: ChatPermissions,
         *,
+        use_independent_chat_permissions: Optional[bool] = None,
         until_date: Optional[int] = None,
     ) -> bool:
         """Restrict what a member may do in a supergroup."""
@@ -1147,6 +1691,7 @@ class Bot:
                 chat_id=chat_id,
                 user_id=user_id,
                 permissions=permissions,
+                use_independent_chat_permissions=use_independent_chat_permissions,
                 until_date=until_date,
             )
         )
@@ -1164,8 +1709,21 @@ class Bot:
         can_invite_users: Optional[bool] = None,
         can_pin_messages: Optional[bool] = None,
         can_manage_topics: Optional[bool] = None,
+        is_anonymous: Optional[bool] = None,
+        can_manage_video_chats: Optional[bool] = None,
+        can_post_messages: Optional[bool] = None,
+        can_edit_messages: Optional[bool] = None,
+        can_post_stories: Optional[bool] = None,
+        can_edit_stories: Optional[bool] = None,
+        can_delete_stories: Optional[bool] = None,
+        can_manage_direct_messages: Optional[bool] = None,
+        can_manage_tags: Optional[bool] = None,
     ) -> bool:
-        """Promote or demote a member by toggling administrator rights."""
+        """Promote or demote a member by toggling administrator rights.
+
+        Every right left as None is unchanged. can_post_messages,
+        can_edit_messages, and the story rights apply to channels only.
+        """
         return bool(
             await self._call(
                 "promoteChatMember",
@@ -1179,6 +1737,15 @@ class Bot:
                 can_invite_users=can_invite_users,
                 can_pin_messages=can_pin_messages,
                 can_manage_topics=can_manage_topics,
+                is_anonymous=is_anonymous,
+                can_manage_video_chats=can_manage_video_chats,
+                can_post_messages=can_post_messages,
+                can_edit_messages=can_edit_messages,
+                can_post_stories=can_post_stories,
+                can_edit_stories=can_edit_stories,
+                can_delete_stories=can_delete_stories,
+                can_manage_direct_messages=can_manage_direct_messages,
+                can_manage_tags=can_manage_tags,
             )
         )
 
@@ -1197,12 +1764,19 @@ class Bot:
         )
 
     async def set_chat_permissions(
-        self, chat_id: int | str, permissions: ChatPermissions
+        self,
+        chat_id: int | str,
+        permissions: ChatPermissions,
+        *,
+        use_independent_chat_permissions: Optional[bool] = None,
     ) -> bool:
         """Set the default permissions for all members of a supergroup."""
         return bool(
             await self._call(
-                "setChatPermissions", chat_id=chat_id, permissions=permissions
+                "setChatPermissions",
+                chat_id=chat_id,
+                permissions=permissions,
+                use_independent_chat_permissions=use_independent_chat_permissions,
             )
         )
 
@@ -1216,9 +1790,16 @@ class Bot:
             await self._call("getChatMember", chat_id=chat_id, user_id=user_id)
         )
 
-    async def get_chat_administrators(self, chat_id: int | str) -> list[ChatMember]:
-        """List the administrators of a chat."""
-        result = await self._call("getChatAdministrators", chat_id=chat_id)
+    async def get_chat_administrators(
+        self, chat_id: int | str, *, return_bots: Optional[bool] = None
+    ) -> list[ChatMember]:
+        """List the administrators of a chat.
+
+        Bot administrators are left out unless return_bots is True.
+        """
+        result = await self._call(
+            "getChatAdministrators", chat_id=chat_id, return_bots=return_bots
+        )
         return [ChatMember.from_dict(member) for member in result]
 
     async def get_chat_member_count(self, chat_id: int | str) -> int:
@@ -1240,6 +1821,7 @@ class Bot:
         name: Optional[str] = None,
         expire_date: Optional[int] = None,
         member_limit: Optional[int] = None,
+        creates_join_request: Optional[bool] = None,
     ) -> ChatInviteLink:
         """Create an additional invite link for a chat."""
         return ChatInviteLink.from_dict(
@@ -1249,6 +1831,7 @@ class Bot:
                 name=name,
                 expire_date=expire_date,
                 member_limit=member_limit,
+                creates_join_request=creates_join_request,
             )
         )
 
@@ -1862,12 +2445,17 @@ class Bot:
         currency: str,
         prices: list[LabeledPrice],
         *,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
         provider_token: Optional[str] = None,
         max_tip_amount: Optional[int] = None,
         suggested_tip_amounts: Optional[list[int]] = None,
         start_parameter: Optional[str] = None,
         provider_data: Optional[str] = None,
         photo_url: Optional[str] = None,
+        photo_size: Optional[int] = None,
+        photo_width: Optional[int] = None,
+        photo_height: Optional[int] = None,
         need_name: Optional[bool] = None,
         need_phone_number: Optional[bool] = None,
         need_email: Optional[bool] = None,
@@ -1877,7 +2465,11 @@ class Bot:
         is_flexible: Optional[bool] = None,
         disable_notification: Optional[bool] = None,
         protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_to_message_id: Optional[int] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
         reply_markup: Optional[ReplyMarkup] = None,
     ) -> Message:
         """Send an invoice. payload is your internal id, echoed back on payment.
@@ -1893,13 +2485,18 @@ class Bot:
                 description=description,
                 payload=payload,
                 currency=currency,
-                prices=[price.to_dict() for price in prices],
+                prices=prices,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
                 provider_token=provider_token,
                 max_tip_amount=max_tip_amount,
                 suggested_tip_amounts=suggested_tip_amounts,
                 start_parameter=start_parameter,
                 provider_data=provider_data,
                 photo_url=photo_url,
+                photo_size=photo_size,
+                photo_width=photo_width,
+                photo_height=photo_height,
                 need_name=need_name,
                 need_phone_number=need_phone_number,
                 need_email=need_email,
@@ -1909,7 +2506,11 @@ class Bot:
                 is_flexible=is_flexible,
                 disable_notification=disable_notification,
                 protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
                 reply_to_message_id=reply_to_message_id,
+                reply_parameters=reply_parameters,
                 reply_markup=reply_markup,
             )
         )
@@ -1929,6 +2530,9 @@ class Bot:
         suggested_tip_amounts: Optional[list[int]] = None,
         provider_data: Optional[str] = None,
         photo_url: Optional[str] = None,
+        photo_size: Optional[int] = None,
+        photo_width: Optional[int] = None,
+        photo_height: Optional[int] = None,
         need_name: Optional[bool] = None,
         need_phone_number: Optional[bool] = None,
         need_email: Optional[bool] = None,
@@ -1945,7 +2549,7 @@ class Bot:
                 description=description,
                 payload=payload,
                 currency=currency,
-                prices=[price.to_dict() for price in prices],
+                prices=prices,
                 business_connection_id=business_connection_id,
                 provider_token=provider_token,
                 subscription_period=subscription_period,
@@ -1953,6 +2557,9 @@ class Bot:
                 suggested_tip_amounts=suggested_tip_amounts,
                 provider_data=provider_data,
                 photo_url=photo_url,
+                photo_size=photo_size,
+                photo_width=photo_width,
+                photo_height=photo_height,
                 need_name=need_name,
                 need_phone_number=need_phone_number,
                 need_email=need_email,

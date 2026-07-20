@@ -73,4 +73,16 @@ TTL); send the final version with `send_rich_message`. In a blocks draft,
 `InputRichBlockThinking` renders a "thinking" placeholder for content that has
 not arrived yet; it is valid only in drafts.
 
+## Editing
+
+`edit_rich_message_text` replaces the text of an already-sent message with
+rich content. It takes the same `html` / `markdown` / `blocks` / `media` forms
+as `send_rich_message`:
+
+```python
+await bot.edit_rich_message_text(
+    chat_id=chat_id, message_id=message_id, markdown="All **done**."
+)
+```
+
 See the [rich API reference](api/rich.md) for every block and inline helper.
