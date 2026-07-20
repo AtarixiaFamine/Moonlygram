@@ -91,8 +91,10 @@ app.run_polling()
 ## Roadmap
 
 Core messaging, media, chat and member administration, bot configuration, forum topics,
-stickers, and inline mode are all covered. Still in progress: the niche Bot API domains of
-payments / Telegram Stars, business accounts, games, and passport / giveaways / paid media.
+stickers, inline mode, and payments / Telegram Stars are all covered, and every modelled
+method accepts every parameter the Bot API defines for it (a drift test enforces this
+against the vendored spec). Still in progress: the niche Bot API domains of business
+accounts, games, gifts and stories, checklists, and passport / paid media.
 
 ## Contributing
 

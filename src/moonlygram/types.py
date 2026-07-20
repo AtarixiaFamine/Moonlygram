@@ -947,6 +947,127 @@ class ReplyParameters:
 
 
 @dataclass(slots=True)
+class LinkPreviewOptions:
+    """How the link preview for a message is generated.
+
+    Pass this as link_preview_options to send_message or edit_message_text.
+    Set is_disabled to suppress the preview entirely, url to preview a link
+    other than the first one in the text, and prefer_small_media or
+    prefer_large_media to override the preview's default size.
+    """
+
+    is_disabled: Optional[bool] = None
+    url: Optional[str] = None
+    prefer_small_media: Optional[bool] = None
+    prefer_large_media: Optional[bool] = None
+    show_above_text: Optional[bool] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "is_disabled": self.is_disabled,
+            "url": self.url,
+            "prefer_small_media": self.prefer_small_media,
+            "prefer_large_media": self.prefer_large_media,
+            "show_above_text": self.show_above_text,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class SuggestedPostPrice:
+    """The price asked for publishing a suggested post.
+
+    amount is in the currency's smallest units, like LabeledPrice.
+    """
+
+    currency: str
+    amount: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"currency": self.currency, "amount": self.amount}
+
+
+@dataclass(slots=True)
+class SuggestedPostParameters:
+    """Terms of a post suggested to a direct messages chat.
+
+    price is what the sender asks to be paid for publishing the post, and
+    send_date is a Unix timestamp for when it should go out. Omitting both
+    suggests the post with no price and no fixed schedule.
+    """
+
+    price: Optional[SuggestedPostPrice] = None
+    send_date: Optional[int] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "price": self.price.to_dict() if self.price is not None else None,
+            "send_date": self.send_date,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class InputPollOption:
+    """One answer option of a poll being sent.
+
+    send_poll also accepts plain strings, so this is only needed when an option
+    carries its own formatting (text_parse_mode, text_entities) or media.
+    """
+
+    text: str
+    text_parse_mode: Optional[str] = None
+    text_entities: Optional[list["MessageEntity"]] = None
+    media: Optional["InputPollMedia"] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "text": self.text,
+            "text_parse_mode": self.text_parse_mode,
+            "text_entities": self.text_entities,
+            "media": _maybe_to_dict(self.media),
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class ReplyKeyboardRemove:
+    """Removes the custom reply keyboard and restores the letter keyboard.
+
+    Pass this as reply_markup. Set selective to remove the keyboard only for
+    the users the message replies to or mentions.
+    """
+
+    selective: Optional[bool] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {"remove_keyboard": True}
+        if self.selective is not None:
+            d["selective"] = self.selective
+        return d
+
+
+@dataclass(slots=True)
+class ForceReply:
+    """Shows a reply interface to the user as if they tapped Reply.
+
+    Pass this as reply_markup to collect a private one-off answer without
+    needing the user to reply manually.
+    """
+
+    input_field_placeholder: Optional[str] = None
+    selective: Optional[bool] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {"force_reply": True}
+        if self.input_field_placeholder is not None:
+            d["input_field_placeholder"] = self.input_field_placeholder
+        if self.selective is not None:
+            d["selective"] = self.selective
+        return d
+
+
+@dataclass(slots=True)
 class LabeledPrice:
     """One labeled line item in an invoice price breakdown.
 
@@ -1523,7 +1644,16 @@ class InlineQueryResultCachedSticker:
         )
 
 
-ReplyMarkup = Union[InlineKeyboardMarkup, ReplyKeyboardMarkup, dict[str, Any]]
+ReplyMarkup = Union[
+    InlineKeyboardMarkup,
+    ReplyKeyboardMarkup,
+    ReplyKeyboardRemove,
+    ForceReply,
+    dict[str, Any],
+]
+
+#: A poll answer option: an InputPollOption, or plain option text.
+PollOptionInput = Union["InputPollOption", str]
 
 #: A file argument: an InputFile to upload, or a string file_id / URL.
 FileInput = Union["InputFile", str]
@@ -1537,6 +1667,10 @@ InputMedia = Union[
     InputMediaAnimation,
     dict[str, Any],
 ]
+
+#: Media on a poll (question, description, explanation, or an option): an
+#: InputMedia item, or a raw dict for kinds not modelled, like venue.
+InputPollMedia = InputMedia
 
 #: A reaction (set on / received from a message), or a raw dict for an unknown kind.
 ReactionType = Union[

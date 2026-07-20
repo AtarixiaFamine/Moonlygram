@@ -115,12 +115,15 @@ account-level features ptb also lacks are out of scope. Within the Bot API, a
 few **niche domains are still in progress** — a bot that relies on these can't
 move over until they land:
 
-- Payments / Telegram Stars
 - Business accounts and connections
 - Games
 - Passport, giveaways, and paid media
+- Gifts, stories, and checklists
 
 Everything else — messaging and editing, media, albums, chat and member
-administration, bot configuration, forum topics, stickers, and inline mode — is
-already covered. If you hit an unmodelled method in the meantime, the escape
-hatch `bot.call("anyMethod", **params)` reaches it directly.
+administration, bot configuration, forum topics, stickers, inline mode, and
+payments / Telegram Stars — is already covered, and every method Moonlygram
+models accepts every parameter the Bot API defines for it (a test enforces
+this against the vendored spec). If you hit an unmodelled method in the
+meantime, the escape hatch `bot.call("anyMethod", **params)` reaches it
+directly.

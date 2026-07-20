@@ -4,6 +4,51 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Full parameter coverage for every modelled Bot API method. 266 parameters
+  across 39 methods were missing; all are now accepted. The most widely felt:
+  `message_thread_id` (forum topics) on every send method, `disable_notification`
+  and `protect_content` library-wide, `business_connection_id` on the send and
+  edit families, and `entities` / `caption_entities` wherever a caption or text
+  is sent.
+- Notable per-method gaps closed: `link_preview_options` on `send_message` and
+  `edit_message_text`; `duration`, `width`, `height`, `thumbnail`, `cover`,
+  `has_spoiler`, and `supports_streaming` on `send_video` (and the matching
+  fields on the other media senders); the full modern poll surface on
+  `send_poll` (`explanation`, `open_period`, `close_date`, `correct_option_ids`,
+  `shuffle_options`, and more); the nine missing administrator rights on
+  `promote_chat_member`; and `certificate` / `ip_address` on `set_webhook`.
+- New types for the parameters above: `LinkPreviewOptions`,
+  `SuggestedPostParameters` (with `SuggestedPostPrice`), `InputPollOption`,
+  `ReplyKeyboardRemove`, and `ForceReply`. The last two also join the
+  `ReplyMarkup` union, and `InputPollMedia` is a new alias accepting any
+  `InputMedia` item as poll media.
+- `edit_rich_message_text`, which replaces a message's text with rich content.
+  It takes the same `html` / `markdown` / `blocks` / `media` forms as
+  `send_rich_message`.
+- Generated data types now have a `to_dict`, so an object received from Telegram
+  can be passed straight back to a send method (echoing `message.entities`, for
+  example).
+
+### Changed
+- `send_poll` accepts `InputPollOption` objects as well as plain strings for
+  `options`, so an option can carry its own formatting or media. Plain strings
+  are normalized to the `InputPollOption` shape on the wire, as the spec
+  defines.
+- `Session` now serializes nested lists and dicts, so a list of objects works
+  anywhere a single object does. This removes the per-call-site conversion that
+  `send_media_group`, `set_message_reaction`, `send_invoice`, and
+  `create_invoice_link` each did by hand.
+
+### Fixed
+- `Defaults(disable_notification=...)` reached only the few methods that
+  already exposed the parameter (the forward and copy family,
+  `send_media_group`, `pin_chat_message`, `send_invoice`), and
+  `Defaults(protect_content=...)` only `send_invoice`. Every send method now
+  exposes both, so the defaults apply library-wide as intended.
+
 ## [0.3.0] - 2026-07-14
 
 ### Added
