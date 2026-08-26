@@ -14,6 +14,7 @@ ApplicationBuilder.arbitrary_callback_data(...).
 from __future__ import annotations
 
 from collections import OrderedDict
+from dataclasses import replace
 from typing import Any
 from uuid import uuid4
 
@@ -62,16 +63,14 @@ class CallbackDataCache:
                 data = button.callback_data
                 if data is not None and not isinstance(data, str):
                     token = self.put(data)
-                    new_row.append(
-                        InlineKeyboardButton(
-                            text=button.text, callback_data=token, url=button.url
-                        )
-                    )
+                    # replace() copies every other field, so a button keeps its
+                    # style, icon, copy_text and the rest of the API surface.
+                    new_row.append(replace(button, callback_data=token))
                     changed = True
                 else:
                     new_row.append(button)
             new_rows.append(new_row)
-        return InlineKeyboardMarkup(new_rows) if changed else markup
+        return replace(markup, inline_keyboard=new_rows) if changed else markup
 
     def process_callback_query(self, query: Any) -> None:
         """Swap a query's token data back to the stored object, in place."""

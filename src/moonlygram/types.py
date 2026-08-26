@@ -188,6 +188,7 @@ class Message:
     community_chat_added: Optional["CommunityChatAdded"] = None
     community_chat_joined: Optional["CommunityChatJoined"] = None
     community_chat_removed: Optional["CommunityChatRemoved"] = None
+    reply_markup: Optional["InlineKeyboardMarkup"] = None
     raw: dict[str, Any] = field(default_factory=dict, repr=False)
     _bot: "Optional[Bot]" = field(default=None, init=False, repr=False, compare=False)
 
@@ -287,6 +288,11 @@ class Message:
             community_chat_removed=(
                 CommunityChatRemoved.from_dict(d["community_chat_removed"])
                 if "community_chat_removed" in d
+                else None
+            ),
+            reply_markup=(
+                InlineKeyboardMarkup.from_dict(d["reply_markup"])
+                if "reply_markup" in d
                 else None
             ),
             raw=d,
@@ -1408,11 +1414,32 @@ class DisabledButton:
 
 
 @dataclass(slots=True)
+class CopyTextButton:
+    """The text a copy button puts on the user's clipboard when tapped.
+
+    Pass an instance as an InlineKeyboardButton's copy_text. Telegram allows up
+    to 256 characters.
+    """
+
+    text: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"text": self.text}
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "CopyTextButton":
+        return cls(text=d["text"])
+
+
+@dataclass(slots=True)
 class InlineKeyboardButton:
-    """A button on an inline keyboard. Set exactly one action (callback_data or url).
+    """A button on an inline keyboard. Set exactly one action (callback_data, url,
+    copy_text, and so on).
 
     style colors the button: "primary", "success", or "danger" (Bot API 9.4).
-    icon_custom_emoji_id puts a custom emoji on the button.
+    icon_custom_emoji_id puts a custom emoji on the button. web_app, login_url,
+    switch_inline_query_chosen_chat, and callback_game take the Bot API object
+    as a dict, since the library does not model them.
     """
 
     text: str
@@ -1421,20 +1448,35 @@ class InlineKeyboardButton:
     style: Optional[Literal["primary", "success", "danger"]] = None
     icon_custom_emoji_id: Optional[str] = None
     disabled: Optional[DisabledButton] = None
+    copy_text: Optional[CopyTextButton] = None
+    switch_inline_query: Optional[str] = None
+    switch_inline_query_current_chat: Optional[str] = None
+    switch_inline_query_chosen_chat: Optional[dict[str, Any]] = None
+    web_app: Optional[dict[str, Any]] = None
+    login_url: Optional[dict[str, Any]] = None
+    callback_game: Optional[dict[str, Any]] = None
+    pay: Optional[bool] = None
 
     def to_dict(self) -> dict[str, Any]:
-        d: dict[str, Any] = {"text": self.text}
-        if self.callback_data is not None:
-            d["callback_data"] = self.callback_data
-        if self.url is not None:
-            d["url"] = self.url
-        if self.style is not None:
-            d["style"] = self.style
-        if self.icon_custom_emoji_id is not None:
-            d["icon_custom_emoji_id"] = self.icon_custom_emoji_id
-        if self.disabled is not None:
-            d["disabled"] = self.disabled.to_dict()
-        return d
+        # Every field name is its API key, so the payload is just the set
+        # fields. Listing them here instead would go stale on the next new one.
+        d = {f: _maybe_to_dict(getattr(self, f)) for f in self.__dataclass_fields__}
+        return {k: v for k, v in d.items() if v is not None}
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "InlineKeyboardButton":
+        return cls(
+            text=d["text"],
+            copy_text=(
+                CopyTextButton.from_dict(d["copy_text"]) if "copy_text" in d else None
+            ),
+            disabled=DisabledButton() if "disabled" in d else None,
+            **{
+                k: d.get(k)
+                for k in cls.__dataclass_fields__
+                if k not in ("text", "copy_text", "disabled")
+            },
+        )
 
 
 @dataclass(slots=True)
@@ -1457,26 +1499,42 @@ class InlineKeyboardMarkup:
             d["force_reply"] = self.force_reply
         return d
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "InlineKeyboardMarkup":
+        return cls(
+            inline_keyboard=[
+                [InlineKeyboardButton.from_dict(b) for b in row]
+                for row in d.get("inline_keyboard", ())
+            ],
+            force_reply=d.get("force_reply"),
+        )
+
 
 @dataclass(slots=True)
 class KeyboardButton:
     """A button on a custom reply keyboard.
 
     style colors the button: "primary", "success", or "danger" (Bot API 9.4).
-    icon_custom_emoji_id puts a custom emoji on the button.
+    icon_custom_emoji_id puts a custom emoji on the button. request_users,
+    request_chat, request_managed_bot, request_poll, and web_app take the Bot
+    API object as a dict, since the library does not model them.
     """
 
     text: str
     style: Optional[Literal["primary", "success", "danger"]] = None
     icon_custom_emoji_id: Optional[str] = None
+    request_contact: Optional[bool] = None
+    request_location: Optional[bool] = None
+    request_users: Optional[dict[str, Any]] = None
+    request_chat: Optional[dict[str, Any]] = None
+    request_managed_bot: Optional[dict[str, Any]] = None
+    request_poll: Optional[dict[str, Any]] = None
+    web_app: Optional[dict[str, Any]] = None
 
     def to_dict(self) -> dict[str, Any]:
-        d: dict[str, Any] = {"text": self.text}
-        if self.style is not None:
-            d["style"] = self.style
-        if self.icon_custom_emoji_id is not None:
-            d["icon_custom_emoji_id"] = self.icon_custom_emoji_id
-        return d
+        # Field names are the API keys, as on InlineKeyboardButton.
+        d = {f: _maybe_to_dict(getattr(self, f)) for f in self.__dataclass_fields__}
+        return {k: v for k, v in d.items() if v is not None}
 
 
 @dataclass(slots=True)
@@ -1487,17 +1545,14 @@ class ReplyKeyboardMarkup:
     resize_keyboard: Optional[bool] = None
     one_time_keyboard: Optional[bool] = None
     force_reply: Optional[bool] = None
+    is_persistent: Optional[bool] = None
+    input_field_placeholder: Optional[str] = None
+    selective: Optional[bool] = None
 
     def to_dict(self) -> dict[str, Any]:
-        d: dict[str, Any] = {
-            "keyboard": [[button.to_dict() for button in row] for row in self.keyboard]
-        }
-        if self.resize_keyboard is not None:
-            d["resize_keyboard"] = self.resize_keyboard
-        if self.one_time_keyboard is not None:
-            d["one_time_keyboard"] = self.one_time_keyboard
-        if self.force_reply is not None:
-            d["force_reply"] = self.force_reply
+        d = {f: getattr(self, f) for f in self.__dataclass_fields__ if f != "keyboard"}
+        d = {k: v for k, v in d.items() if v is not None}
+        d["keyboard"] = [[button.to_dict() for button in row] for row in self.keyboard]
         return d
 
 

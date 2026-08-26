@@ -1,6 +1,7 @@
 """Tests for arbitrary callback data."""
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any
 
 from moonlygram import (
@@ -50,6 +51,30 @@ def test_callback_data_cache_round_trip():
     )
     cache.process_callback_query(unknown)
     assert unknown.data == "plain"  # not a known token: left as-is
+
+
+def test_rewritten_keyboard_keeps_every_other_button_field():
+    from moonlygram import CopyTextButton, DisabledButton
+    from moonlygram.ext import CallbackDataCache
+
+    cache = CallbackDataCache()
+    button = InlineKeyboardButton(
+        "Del",
+        callback_data={"action": "delete"},
+        style="danger",
+        icon_custom_emoji_id="55",
+        disabled=DisabledButton(),
+        copy_text=CopyTextButton("ABC-123"),
+        pay=True,
+    )
+    markup = InlineKeyboardMarkup([[button]], force_reply=True)
+    rewritten = cache.process_keyboard(markup)
+
+    new_button = rewritten.inline_keyboard[0][0]
+    assert new_button.callback_data != button.callback_data
+    # Only callback_data changes; a rebuilt button used to drop the rest.
+    assert new_button == replace(button, callback_data=new_button.callback_data)
+    assert rewritten.force_reply is True
 
 
 def test_callback_data_cache_passes_through_other_markup():
