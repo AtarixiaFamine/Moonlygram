@@ -100,6 +100,9 @@ TTL); send the final version with `send_rich_message`. In a blocks draft,
 `InputRichBlockThinking` renders a "thinking" placeholder for content that has
 not arrived yet; it is valid only in drafts.
 
+Drafts reach private chats only. Sending one to a group is rejected with
+`TEXTDRAFT_PEER_INVALID`, which the Bot API does not document.
+
 Pass `can_stop=True` to give the reader a control that stops the generation.
 Pressing it produces a `stopped_message_generation` update, which
 `MessageGenerationStoppedHandler` receives; the update names the draft with
