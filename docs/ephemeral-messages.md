@@ -85,9 +85,14 @@ await bot.edit_ephemeral_message_media(
     chat_id,
     receiver_user_id,
     ephemeral_message_id,
-    InputMediaPhoto(InputFile("chart.png")),
+    InputMediaPhoto(InputFile("chart.png"), caption="Updated chart."),
 )
 ```
+
+Give the media a caption. Telegram rejects a caption-less edit here with
+`MESSAGE_EMPTY`, whether the file is uploaded or referenced by `file_id` or
+URL. The Bot API does not document this, and the other edit methods do not
+behave the same way.
 
 To replace the text with rich content, use
 `edit_ephemeral_rich_message_text`, which takes the same `html` / `markdown` /

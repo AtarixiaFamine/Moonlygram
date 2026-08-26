@@ -211,7 +211,8 @@ class Bot:
         send the final version with send_message. Empty text clears the draft.
         can_stop offers the user a control to stop the generation, which arrives
         as a stopped_message_generation update; keep_on_stop leaves the text
-        already written in place when they do.
+        already written in place when they do. Drafts reach private chats only; a group is rejected with
+        TEXTDRAFT_PEER_INVALID.
         """
         return bool(
             await self._call(
@@ -321,6 +322,8 @@ class Bot:
         markdown, or blocks. can_stop offers the user a control to stop the
         generation, which arrives as a stopped_message_generation update;
         keep_on_stop leaves the text already written in place when they do.
+        Drafts reach private chats only; a group is rejected with
+        TEXTDRAFT_PEER_INVALID.
         """
         return bool(
             await self._call(
@@ -1592,7 +1595,9 @@ class Bot:
         """Replace the media of an ephemeral message. Returns True on success.
 
         Put an InputFile in the media object to upload a new file, or reference
-        one by file_id or URL.
+        one by file_id or URL. The media must carry a caption: Telegram rejects
+        a caption-less edit here with MESSAGE_EMPTY, whichever way the file is
+        supplied.
         """
         return bool(
             await self._call(
