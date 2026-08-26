@@ -4,6 +4,38 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-08-26
+
+The keyboard types are hand-written, while everything around them is generated
+and drift-checked against the spec. They fell behind: `copy_text` had been in
+the Bot API since 7.11 and was unreachable, and a `slots=True` dataclass gives
+no way to work around a missing field. They are now checked against the spec
+too, so the whole family fails CI the next time it drifts.
+
+### Added
+- `CopyTextButton` and `InlineKeyboardButton.copy_text`: a button that copies
+  text to the clipboard. Also `web_app`, `login_url`, `switch_inline_query`,
+  `switch_inline_query_current_chat`, `switch_inline_query_chosen_chat`,
+  `callback_game`, and `pay`, completing the type against the spec.
+- `KeyboardButton.request_contact`, `request_location`, `request_users`,
+  `request_chat`, `request_managed_bot`, `request_poll`, and `web_app`;
+  `ReplyKeyboardMarkup.is_persistent`, `input_field_placeholder`, and
+  `selective`.
+- `Message.reply_markup`, parsed as an `InlineKeyboardMarkup`. A message's
+  keyboard was reachable only as `message.raw["reply_markup"]`, so an edit that
+  rebuilt it from typed objects dropped whatever the button type did not model.
+  Telegram clears the keyboard on any edit that omits `reply_markup`, so that
+  loss was silent and permanent.
+- `InlineKeyboardButton.from_dict` and `InlineKeyboardMarkup.from_dict`, so a
+  received keyboard round-trips back out unchanged.
+
+### Fixed
+- Arbitrary callback data no longer strips a button while tokenising it.
+  `CallbackDataCache.process_keyboard` rebuilt each button from `text`,
+  `callback_data`, and `url` alone, dropping `style`, `icon_custom_emoji_id`,
+  `disabled`, and the markup's `force_reply`. It now copies the button and
+  replaces one field, so new fields carry through on their own.
+
 ## [1.3.0] - 2026-08-26
 
 Bot API 10.3, complete: every line of the changelog is implemented. The vendored

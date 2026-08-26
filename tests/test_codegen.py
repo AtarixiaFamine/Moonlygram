@@ -81,3 +81,28 @@ def test_rich_block_matches_spec_fields(name: str) -> None:
     assert set(BLOCKS[name].__dataclass_fields__) == modelled, (
         f"{name} drifted from the Bot API spec"
     )
+
+
+# The keyboard types are hand-written too, and for the same reason: they are
+# sent, so they carry a to_dict. Nothing generated them, so a new spec field
+# lands nowhere unless someone notices; that is how copy_text sat unmodelled
+# from Bot API 7.11 to 10.3 while the generated types stayed current. Each name
+# maps to the required discriminator to_dict stamps rather than stores.
+KEYBOARDS = {
+    "InlineKeyboardButton": (),
+    "InlineKeyboardMarkup": (),
+    "CopyTextButton": (),
+    "KeyboardButton": (),
+    "ReplyKeyboardMarkup": (),
+    "ReplyKeyboardRemove": ("remove_keyboard",),
+    "ForceReply": ("force_reply",),
+}
+
+
+@pytest.mark.parametrize("name", sorted(KEYBOARDS))
+def test_keyboard_type_matches_spec_fields(name: str) -> None:
+    stamped = set(KEYBOARDS[name])
+    modelled = set(getattr(types, name).__dataclass_fields__) | stamped
+    assert modelled == _spec_field_names(name), (
+        f"{name} drifted from the Bot API spec; add the field to types.py"
+    )

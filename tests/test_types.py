@@ -187,6 +187,96 @@ def test_disabled_button_serializes_as_an_empty_object():
     assert "disabled" not in InlineKeyboardButton("Go", callback_data="x").to_dict()
 
 
+def test_copy_text_button_round_trips():
+    from moonlygram import CopyTextButton
+
+    button = InlineKeyboardButton("Copy code", copy_text=CopyTextButton("ABC-123"))
+    assert button.to_dict() == {
+        "text": "Copy code",
+        "copy_text": {"text": "ABC-123"},
+    }
+    assert InlineKeyboardButton.from_dict(button.to_dict()) == button
+
+
+def test_inline_keyboard_button_serializes_the_rest_of_the_spec():
+    button = InlineKeyboardButton(
+        "Open",
+        web_app={"url": "https://app"},
+        login_url={"url": "https://login"},
+        switch_inline_query="q",
+        switch_inline_query_current_chat="here",
+        switch_inline_query_chosen_chat={"query": "q", "allow_user_chats": True},
+        callback_game={},
+        pay=True,
+    )
+    assert button.to_dict() == {
+        "text": "Open",
+        "web_app": {"url": "https://app"},
+        "login_url": {"url": "https://login"},
+        "switch_inline_query": "q",
+        "switch_inline_query_current_chat": "here",
+        "switch_inline_query_chosen_chat": {"query": "q", "allow_user_chats": True},
+        "callback_game": {},
+        "pay": True,
+    }
+
+
+def test_keyboard_button_serializes_its_request_fields():
+    assert KeyboardButton("Share", request_contact=True).to_dict() == {
+        "text": "Share",
+        "request_contact": True,
+    }
+    assert KeyboardButton("Pick", request_users={"request_id": 1}).to_dict() == {
+        "text": "Pick",
+        "request_users": {"request_id": 1},
+    }
+
+
+def test_reply_keyboard_markup_serializes_its_remaining_fields():
+    from moonlygram import ReplyKeyboardMarkup
+
+    assert ReplyKeyboardMarkup(
+        [[KeyboardButton("a")]],
+        is_persistent=True,
+        input_field_placeholder="Type here",
+        selective=True,
+    ).to_dict() == {
+        "keyboard": [[{"text": "a"}]],
+        "is_persistent": True,
+        "input_field_placeholder": "Type here",
+        "selective": True,
+    }
+
+
+def test_message_parses_its_reply_markup():
+    from moonlygram import CopyTextButton, InlineKeyboardMarkup
+
+    markup = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton("Copy", copy_text=CopyTextButton("ABC-123")),
+                InlineKeyboardButton("Go", url="https://x", style="primary"),
+            ]
+        ],
+        force_reply=True,
+    )
+    msg = Message.from_dict(
+        {
+            "message_id": 1,
+            "chat": {"id": -100, "type": "channel"},
+            "text": "hi",
+            "reply_markup": markup.to_dict(),
+        }
+    )
+    # An edit that re-sends the parsed markup must put back what came in;
+    # Telegram drops the whole keyboard from any edit that omits it.
+    assert msg.reply_markup == markup
+    assert msg.reply_markup.to_dict() == markup.to_dict()
+    assert Message.from_dict(
+        {"message_id": 2, "chat": {"id": 1, "type": "private"}}
+    ).reply_markup is None
+
+
 def test_both_markups_can_force_a_reply():
     from moonlygram import InlineKeyboardMarkup, ReplyKeyboardMarkup
 

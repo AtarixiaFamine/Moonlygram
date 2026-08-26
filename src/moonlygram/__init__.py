@@ -84,6 +84,7 @@ from .types import (
     ChatPermissions,
     ChosenInlineResult,
     Contact,
+    CopyTextButton,
     Dice,
     Document,
     File,
@@ -177,7 +178,7 @@ from .types import (
     WebhookInfo,
 )
 
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 
 __all__ = [
     "Bot",
@@ -274,6 +275,7 @@ __all__ = [
     "WebhookInfo",
     "InlineKeyboardButton",
     "InlineKeyboardMarkup",
+    "CopyTextButton",
     "KeyboardButton",
     "ReplyKeyboardMarkup",
     "ReplyKeyboardRemove",
