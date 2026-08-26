@@ -172,3 +172,51 @@ def test_reply_and_forwarded_filters():
     )
     assert filters.reply(replied) and not filters.reply(plain)
     assert filters.forwarded(forwarded) and not filters.forwarded(plain)
+
+
+def test_disabled_button_serializes_as_an_empty_object():
+    from moonlygram import DisabledButton
+
+    button = InlineKeyboardButton("Soon", callback_data="x", disabled=DisabledButton())
+    assert button.to_dict() == {
+        "text": "Soon",
+        "callback_data": "x",
+        "disabled": {},
+    }
+    # Unset, the field stays out of the payload entirely.
+    assert "disabled" not in InlineKeyboardButton("Go", callback_data="x").to_dict()
+
+
+def test_both_markups_can_force_a_reply():
+    from moonlygram import InlineKeyboardMarkup, ReplyKeyboardMarkup
+
+    inline = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("a", callback_data="b")]], force_reply=True
+    )
+    reply = ReplyKeyboardMarkup([[KeyboardButton("a")]], force_reply=True)
+    assert inline.to_dict()["force_reply"] is True
+    assert reply.to_dict()["force_reply"] is True
+    assert "force_reply" not in ReplyKeyboardMarkup([[KeyboardButton("a")]]).to_dict()
+
+
+def test_unique_gift_info_parses_its_10_3_fields():
+    from moonlygram import Message
+
+    msg = Message.from_dict(
+        {
+            "message_id": 1,
+            "chat": {"id": 1, "type": "private"},
+            "unique_gift": {
+                "origin": "upgrade",
+                "text": "for you",
+                "is_private": True,
+                "entities": [{"type": "bold", "offset": 0, "length": 3}],
+                "gift": {"gift_id": "g1", "name": "n", "number": 7},
+            },
+        }
+    )
+    gift = msg.unique_gift
+    assert gift is not None
+    assert (gift.text, gift.is_private, gift.origin) == ("for you", True, "upgrade")
+    assert gift.entities is not None and gift.entities[0].type == "bold"
+    assert gift.gift.number == 7

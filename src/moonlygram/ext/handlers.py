@@ -461,3 +461,25 @@ class PreCheckoutQueryHandler(BaseHandler):
 
     def check_update(self, update: Update) -> bool:
         return update.pre_checkout_query is not None
+
+
+class MessageGenerationStoppedHandler(BaseHandler):
+    """Run the callback when a user stops the generation of a draft message.
+
+    The update names the draft with draft_id, so a bot streaming a reply can
+    stop writing to it.
+    """
+
+    def check_update(self, update: Update) -> bool:
+        return update.stopped_message_generation is not None
+
+
+class BotSubscriptionHandler(BaseHandler):
+    """Run the callback when a user's payment subscription to the bot changes.
+
+    The update carries the subscription state and the invoice_payload the
+    subscription was created with.
+    """
+
+    def check_update(self, update: Update) -> bool:
+        return update.subscription is not None

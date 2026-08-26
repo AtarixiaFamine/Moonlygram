@@ -116,11 +116,11 @@ class MaskPosition:
 class InputSticker:
     """A sticker to add to a set (sent).
 
-    sticker is a file_id, an HTTP URL, or "attach://<name>" for an uploaded
-    file; format is one of "static", "animated", or "video".
+    sticker is an InputFile to upload, or a file_id / URL string; format is
+    one of "static", "animated", or "video".
     """
 
-    sticker: str
+    sticker: FileInput
     format: str
     emoji_list: list[str]
     mask_position: Optional[MaskPosition] = None
@@ -182,6 +182,12 @@ class Message:
     refunded_payment: Optional[RefundedPayment] = None
     receiver_user: Optional[User] = None
     ephemeral_message_id: Optional[int] = None
+    live_photo: Optional["LivePhoto"] = None
+    rich_message: Optional["RichMessageContent"] = None
+    unique_gift: Optional["UniqueGiftInfo"] = None
+    community_chat_added: Optional["CommunityChatAdded"] = None
+    community_chat_joined: Optional["CommunityChatJoined"] = None
+    community_chat_removed: Optional["CommunityChatRemoved"] = None
     raw: dict[str, Any] = field(default_factory=dict, repr=False)
     _bot: "Optional[Bot]" = field(default=None, init=False, repr=False, compare=False)
 
@@ -255,6 +261,34 @@ class Message:
                 User.from_dict(d["receiver_user"]) if "receiver_user" in d else None
             ),
             ephemeral_message_id=d.get("ephemeral_message_id"),
+            live_photo=(
+                LivePhoto.from_dict(d["live_photo"]) if "live_photo" in d else None
+            ),
+            rich_message=(
+                RichMessageContent.from_dict(d["rich_message"])
+                if "rich_message" in d
+                else None
+            ),
+            unique_gift=(
+                UniqueGiftInfo.from_dict(d["unique_gift"])
+                if "unique_gift" in d
+                else None
+            ),
+            community_chat_added=(
+                CommunityChatAdded.from_dict(d["community_chat_added"])
+                if "community_chat_added" in d
+                else None
+            ),
+            community_chat_joined=(
+                CommunityChatJoined.from_dict(d["community_chat_joined"])
+                if "community_chat_joined" in d
+                else None
+            ),
+            community_chat_removed=(
+                CommunityChatRemoved.from_dict(d["community_chat_removed"])
+                if "community_chat_removed" in d
+                else None
+            ),
             raw=d,
         )
 
@@ -442,6 +476,8 @@ class Update:
     message_reaction_count: Optional[MessageReactionCountUpdated] = None
     chat_boost: Optional[ChatBoostUpdated] = None
     removed_chat_boost: Optional[ChatBoostRemoved] = None
+    stopped_message_generation: Optional["MessageGenerationStopped"] = None
+    subscription: Optional["BotSubscriptionUpdated"] = None
     raw: dict[str, Any] = field(default_factory=dict, repr=False)
 
     @classmethod
@@ -528,6 +564,16 @@ class Update:
                 if "removed_chat_boost" in d
                 else None
             ),
+            stopped_message_generation=(
+                MessageGenerationStopped.from_dict(d["stopped_message_generation"])
+                if "stopped_message_generation" in d
+                else None
+            ),
+            subscription=(
+                BotSubscriptionUpdated.from_dict(d["subscription"])
+                if "subscription" in d
+                else None
+            ),
             raw=d,
         )
 
@@ -562,6 +608,8 @@ class Update:
             return self.chat_boost.chat.id
         if self.removed_chat_boost is not None:
             return self.removed_chat_boost.chat.id
+        if self.stopped_message_generation is not None:
+            return self.stopped_message_generation.chat.id
         if self.poll_answer is not None and self.poll_answer.voter_chat is not None:
             return self.poll_answer.voter_chat.id
         return None
@@ -598,6 +646,8 @@ class Update:
             and self.removed_chat_boost.source.user is not None
         ):
             return self.removed_chat_boost.source.user.id
+        if self.subscription is not None:
+            return self.subscription.user.id
         return None
 
     def set_bot(self, bot: "Bot") -> None:
@@ -647,6 +697,10 @@ class Update:
             self.removed_chat_boost.chat.set_bot(bot)
             if self.removed_chat_boost.source.user is not None:
                 self.removed_chat_boost.source.user.set_bot(bot)
+        if self.stopped_message_generation is not None:
+            self.stopped_message_generation.chat.set_bot(bot)
+        if self.subscription is not None:
+            self.subscription.user.set_bot(bot)
 
 
 @dataclass(slots=True)
@@ -727,6 +781,7 @@ class ChatAdministratorRights:
     can_manage_topics: Optional[bool] = None
     can_manage_direct_messages: Optional[bool] = None
     can_manage_tags: Optional[bool] = None
+    can_send_welcome_messages: Optional[bool] = None
 
     def to_dict(self) -> dict[str, Any]:
         return {key: value for key, value in asdict(self).items() if value is not None}
@@ -751,6 +806,7 @@ class ChatAdministratorRights:
             can_manage_topics=d.get("can_manage_topics"),
             can_manage_direct_messages=d.get("can_manage_direct_messages"),
             can_manage_tags=d.get("can_manage_tags"),
+            can_send_welcome_messages=d.get("can_send_welcome_messages"),
         )
 
 
@@ -947,6 +1003,29 @@ class ReplyParameters:
 
 
 @dataclass(slots=True)
+class EphemeralMessageParameters:
+    """Who sees an ephemeral message, and how it is delivered.
+
+    receiver_user_id is the only user the message is shown to. Pass
+    callback_query_id to deliver it as the answer to a callback query, and
+    replace_callback_query_message to show it in place of the message the
+    button was attached to instead of as a new one.
+    """
+
+    receiver_user_id: int
+    callback_query_id: Optional[str] = None
+    replace_callback_query_message: Optional[bool] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {"receiver_user_id": self.receiver_user_id}
+        if self.callback_query_id is not None:
+            d["callback_query_id"] = self.callback_query_id
+        if self.replace_callback_query_message is not None:
+            d["replace_callback_query_message"] = self.replace_callback_query_message
+        return d
+
+
+@dataclass(slots=True)
 class LinkPreviewOptions:
     """How the link preview for a message is generated.
 
@@ -1100,7 +1179,7 @@ class ShippingOption:
 
 def _input_media_dict(
     media_type: str,
-    media: str,
+    media: FileInput,
     caption: Optional[str],
     parse_mode: Optional[str],
     **extra: Any,
@@ -1118,9 +1197,12 @@ def _input_media_dict(
 
 @dataclass(slots=True)
 class InputMediaPhoto:
-    """A photo for a media group or editMessageMedia (media is a file_id or URL)."""
+    """A photo for a media group or editMessageMedia.
 
-    media: str
+    media is an InputFile to upload, or a file_id / URL string.
+    """
+
+    media: FileInput
     caption: Optional[str] = None
     parse_mode: Optional[str] = None
 
@@ -1130,9 +1212,12 @@ class InputMediaPhoto:
 
 @dataclass(slots=True)
 class InputMediaVideo:
-    """A video for a media group or editMessageMedia (media is a file_id or URL)."""
+    """A video for a media group or editMessageMedia.
 
-    media: str
+    media is an InputFile to upload, or a file_id / URL string.
+    """
+
+    media: FileInput
     caption: Optional[str] = None
     parse_mode: Optional[str] = None
     width: Optional[int] = None
@@ -1155,7 +1240,7 @@ class InputMediaVideo:
 class InputMediaAudio:
     """An audio file for a media group or editMessageMedia."""
 
-    media: str
+    media: FileInput
     caption: Optional[str] = None
     parse_mode: Optional[str] = None
     duration: Optional[int] = None
@@ -1176,9 +1261,12 @@ class InputMediaAudio:
 
 @dataclass(slots=True)
 class InputMediaDocument:
-    """A general file for a media group or editMessageMedia."""
+    """A general file for a media group or editMessageMedia.
 
-    media: str
+    media is an InputFile to upload, or a file_id / URL string.
+    """
+
+    media: FileInput
     caption: Optional[str] = None
     parse_mode: Optional[str] = None
 
@@ -1190,7 +1278,7 @@ class InputMediaDocument:
 class InputMediaAnimation:
     """An animation for a media group or editMessageMedia."""
 
-    media: str
+    media: FileInput
     caption: Optional[str] = None
     parse_mode: Optional[str] = None
     width: Optional[int] = None
@@ -1218,7 +1306,7 @@ class InputMediaVoiceNote:
     rich message's media list and in the voice-note rich block.
     """
 
-    media: str
+    media: FileInput
     caption: Optional[str] = None
     parse_mode: Optional[str] = None
     duration: Optional[int] = None
@@ -1309,6 +1397,17 @@ class InputFile:
 
 
 @dataclass(slots=True)
+class DisabledButton:
+    """Marks an inline keyboard button as disabled, so tapping it does nothing.
+
+    The Bot API gives it no fields; pass an instance as a button's disabled.
+    """
+
+    def to_dict(self) -> dict[str, Any]:
+        return {}
+
+
+@dataclass(slots=True)
 class InlineKeyboardButton:
     """A button on an inline keyboard. Set exactly one action (callback_data or url).
 
@@ -1321,6 +1420,7 @@ class InlineKeyboardButton:
     url: Optional[str] = None
     style: Optional[Literal["primary", "success", "danger"]] = None
     icon_custom_emoji_id: Optional[str] = None
+    disabled: Optional[DisabledButton] = None
 
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {"text": self.text}
@@ -1332,21 +1432,30 @@ class InlineKeyboardButton:
             d["style"] = self.style
         if self.icon_custom_emoji_id is not None:
             d["icon_custom_emoji_id"] = self.icon_custom_emoji_id
+        if self.disabled is not None:
+            d["disabled"] = self.disabled.to_dict()
         return d
 
 
 @dataclass(slots=True)
 class InlineKeyboardMarkup:
-    """An inline keyboard: rows of InlineKeyboardButton attached to a message."""
+    """An inline keyboard: rows of InlineKeyboardButton attached to a message.
+
+    force_reply additionally shows the reply interface, as ForceReply does.
+    """
 
     inline_keyboard: list[list[InlineKeyboardButton]]
+    force_reply: Optional[bool] = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        d: dict[str, Any] = {
             "inline_keyboard": [
                 [button.to_dict() for button in row] for row in self.inline_keyboard
             ]
         }
+        if self.force_reply is not None:
+            d["force_reply"] = self.force_reply
+        return d
 
 
 @dataclass(slots=True)
@@ -1377,6 +1486,7 @@ class ReplyKeyboardMarkup:
     keyboard: list[list[KeyboardButton]]
     resize_keyboard: Optional[bool] = None
     one_time_keyboard: Optional[bool] = None
+    force_reply: Optional[bool] = None
 
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {
@@ -1386,6 +1496,8 @@ class ReplyKeyboardMarkup:
             d["resize_keyboard"] = self.resize_keyboard
         if self.one_time_keyboard is not None:
             d["one_time_keyboard"] = self.one_time_keyboard
+        if self.force_reply is not None:
+            d["force_reply"] = self.force_reply
         return d
 
 
@@ -1644,6 +1756,127 @@ class InlineQueryResultCachedSticker:
         )
 
 
+#: Formatted rich text. Sending it, the Bot API accepts a plain string, a list,
+#: or a rich-text object as a dict. Receiving it, a nested object is parsed into
+#: a RichTextNode, so the same alias covers both directions.
+RichTextValue = Union[str, list[Any], dict[str, Any], "RichTextNode"]
+
+
+def _rich_text(value: Any) -> Any:
+    """Parse a received RichText: a string, a list, or a node object."""
+    if isinstance(value, list):
+        return [_rich_text(v) for v in value]
+    if isinstance(value, dict):
+        return RichTextNode.from_dict(value)
+    return value
+
+
+def _rich_caption(value: Any) -> Any:
+    """Parse a block caption, which the spec types two ways.
+
+    Media blocks carry a RichBlockCaption (no discriminator); a table carries a
+    plain RichText, which as an object always names its type.
+    """
+    if isinstance(value, dict) and "type" not in value:
+        return RichBlockCaption.from_dict(value)
+    return _rich_text(value)
+
+
+@dataclass(slots=True)
+class RichBlockCaption:
+    """Caption of a rich block, with an optional cite-style credit."""
+
+    text: RichTextValue
+    credit: Optional[RichTextValue] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {"text": _maybe_to_dict(self.text)}
+        if self.credit is not None:
+            d["credit"] = _maybe_to_dict(self.credit)
+        return d
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "RichBlockCaption":
+        return cls(
+            text=_rich_text(d.get("text")),
+            credit=_rich_text(d["credit"]) if "credit" in d else None,
+        )
+
+
+@dataclass(slots=True)
+class RichBlockTableCell:
+    """One cell of a table block. An empty cell (no text) renders invisible."""
+
+    text: Optional[RichTextValue] = None
+    is_header: Optional[bool] = None
+    colspan: Optional[int] = None
+    rowspan: Optional[int] = None
+    align: Optional[str] = None
+    valign: Optional[str] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "text": _maybe_to_dict(self.text),
+            "is_header": self.is_header,
+            "colspan": self.colspan,
+            "rowspan": self.rowspan,
+            "align": self.align,
+            "valign": self.valign,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "RichBlockTableCell":
+        return cls(
+            text=_rich_text(d["text"]) if "text" in d else None,
+            is_header=d.get("is_header"),
+            colspan=d.get("colspan"),
+            rowspan=d.get("rowspan"),
+            align=d.get("align"),
+            valign=d.get("valign"),
+        )
+
+
+@dataclass(slots=True)
+class RichMessageButton:
+    """A button inside a rich message's buttons block.
+
+    Set exactly one action field. style is "primary", "success", "danger", or
+    "link". web_app, login_url, switch_inline_query_chosen_chat, and copy_text
+    take the Bot API object as a dict, since the library does not model them.
+    """
+
+    text: RichTextValue
+    style: Optional[str] = None
+    url: Optional[str] = None
+    callback_data: Optional[str] = None
+    web_app: Optional[dict[str, Any]] = None
+    login_url: Optional[dict[str, Any]] = None
+    switch_inline_query: Optional[str] = None
+    switch_inline_query_current_chat: Optional[str] = None
+    switch_inline_query_chosen_chat: Optional[dict[str, Any]] = None
+    copy_text: Optional[dict[str, Any]] = None
+    disabled: Optional[DisabledButton] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        # Every field name is its API key and no discriminator is stamped, so
+        # the payload is just the set fields.
+        d = {f: _maybe_to_dict(getattr(self, f)) for f in self.__dataclass_fields__}
+        return {k: v for k, v in d.items() if v is not None}
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "RichMessageButton":
+        return cls(
+            text=_rich_text(d.get("text")),
+            disabled=DisabledButton() if "disabled" in d else None,
+            **{
+                k: d.get(k)
+                for k in cls.__dataclass_fields__
+                if k not in ("text", "disabled")
+            },
+        )
+
+
 ReplyMarkup = Union[
     InlineKeyboardMarkup,
     ReplyKeyboardMarkup,
@@ -1708,6 +1941,7 @@ from ._types_generated import (  # noqa: E402
     BotDescription as BotDescription,
     BotName as BotName,
     BotShortDescription as BotShortDescription,
+    BotSubscriptionUpdated as BotSubscriptionUpdated,
     ChatBoost as ChatBoost,
     ChatBoostRemoved as ChatBoostRemoved,
     ChatBoostSource as ChatBoostSource,
@@ -1715,14 +1949,20 @@ from ._types_generated import (  # noqa: E402
     ChatInviteLink as ChatInviteLink,
     ChatMember as ChatMember,
     ChatMemberUpdated as ChatMemberUpdated,
+    Community as Community,
+    CommunityChatAdded as CommunityChatAdded,
+    CommunityChatJoined as CommunityChatJoined,
+    CommunityChatRemoved as CommunityChatRemoved,
     Contact as Contact,
     Dice as Dice,
     Document as Document,
     File as File,
     ForumTopic as ForumTopic,
     Invoice as Invoice,
+    LivePhoto as LivePhoto,
     Location as Location,
     MessageEntity as MessageEntity,
+    MessageGenerationStopped as MessageGenerationStopped,
     MessageId as MessageId,
     MessageOrigin as MessageOrigin,
     MessageReactionCountUpdated as MessageReactionCountUpdated,
@@ -1734,6 +1974,10 @@ from ._types_generated import (  # noqa: E402
     PollOption as PollOption,
     ReactionCount as ReactionCount,
     RefundedPayment as RefundedPayment,
+    RichBlock as RichBlock,
+    RichBlockListItem as RichBlockListItem,
+    RichMessage as _RichMessage,
+    RichText as _RichText,
     RevenueWithdrawalState as RevenueWithdrawalState,
     SentWebAppMessage as SentWebAppMessage,
     ShippingAddress as ShippingAddress,
@@ -1744,6 +1988,13 @@ from ._types_generated import (  # noqa: E402
     StickerSet as StickerSet,
     SuccessfulPayment as SuccessfulPayment,
     TransactionPartner as TransactionPartner,
+    UniqueGift as UniqueGift,
+    UniqueGiftBackdrop as UniqueGiftBackdrop,
+    UniqueGiftBackdropColors as UniqueGiftBackdropColors,
+    UniqueGiftColors as UniqueGiftColors,
+    UniqueGiftInfo as UniqueGiftInfo,
+    UniqueGiftModel as UniqueGiftModel,
+    UniqueGiftSymbol as UniqueGiftSymbol,
     UserChatBoosts as UserChatBoosts,
     UserProfilePhotos as UserProfilePhotos,
     Venue as Venue,
@@ -1751,3 +2002,11 @@ from ._types_generated import (  # noqa: E402
     VideoNote as VideoNote,
     Voice as Voice,
 )
+
+#: A received rich message. The spec calls this RichMessage, a name the
+#: send-side builder already holds.
+RichMessageContent = _RichMessage
+
+#: One node of received rich text. The spec calls this RichText, a name the
+#: loose send-side alias already holds.
+RichTextNode = _RichText

@@ -241,3 +241,85 @@ class TestUpdateTypeHandlers:
         await app.process_update(_update(_msg("hi")))  # not a boost: ignored
 
         assert seen == ["added", "removed"]
+
+
+_STOPPED_GENERATION_RAW = {
+    "update_id": 9,
+    "stopped_message_generation": {
+        "chat": {"id": -100, "type": "supergroup"},
+        "draft_id": 4,
+        "message_thread_id": 12,
+    },
+}
+
+_SUBSCRIPTION_RAW = {
+    "update_id": 10,
+    "subscription": {
+        "user": {"id": 42, "is_bot": False, "first_name": "R"},
+        "invoice_payload": "pro-monthly",
+        "state": "active",
+    },
+}
+
+
+def test_stopped_message_generation_parses_and_locates_its_chat():
+    update = Update.from_dict(_STOPPED_GENERATION_RAW)
+    stopped = update.stopped_message_generation
+    assert stopped is not None
+    assert (stopped.draft_id, stopped.message_thread_id) == (4, 12)
+    assert update.effective_chat_id == -100
+
+
+def test_bot_subscription_parses_and_locates_its_user():
+    update = Update.from_dict(_SUBSCRIPTION_RAW)
+    subscription = update.subscription
+    assert subscription is not None
+    assert subscription.state == "active"
+    assert subscription.invoice_payload == "pro-monthly"
+    assert update.effective_user_id == 42
+
+
+async def test_new_update_kinds_reach_their_handlers():
+    from moonlygram.ext import BotSubscriptionHandler, MessageGenerationStoppedHandler
+
+    bot, _ = fake_bot()
+    app = Application(bot)
+    seen: list[str] = []
+
+    async def stopped(update, context):
+        seen.append(f"stopped:{update.stopped_message_generation.draft_id}")
+
+    async def subscribed(update, context):
+        seen.append(f"subscription:{update.subscription.state}")
+
+    app.add_handler(MessageGenerationStoppedHandler(stopped))
+    app.add_handler(BotSubscriptionHandler(subscribed))
+    await app.process_update(Update.from_dict(_STOPPED_GENERATION_RAW))
+    await app.process_update(Update.from_dict(_SUBSCRIPTION_RAW))
+    await app.process_update(_update(_msg("unrelated")))
+
+    assert seen == ["stopped:4", "subscription:active"]
+
+
+def test_new_update_kinds_bind_the_bot_onto_their_children():
+    bot, _ = fake_bot()
+    stopped = Update.from_dict(_STOPPED_GENERATION_RAW)
+    subscription = Update.from_dict(_SUBSCRIPTION_RAW)
+    stopped.set_bot(bot)
+    subscription.set_bot(bot)
+    assert stopped.stopped_message_generation.chat._bot is bot
+    assert subscription.subscription.user._bot is bot
+
+
+def test_community_service_messages_parse():
+    msg = Message.from_dict(
+        {
+            "message_id": 5,
+            "chat": {"id": -100, "type": "supergroup"},
+            "community_chat_joined": {"community": {"id": 7, "name": "Builders"}},
+        }
+    )
+    assert msg.community_chat_joined is not None
+    assert msg.community_chat_joined.community.name == "Builders"
+    assert msg.community_chat_added is None
+    assert msg.community_chat_removed is None

@@ -1,4 +1,4 @@
-"""Structured rich-message blocks (Bot API 10.2).
+"""Structured rich-message blocks (Bot API 10.2, extended in 10.3).
 
 A rich message can be described either with the HTML or Markdown dialect (see
 builder.py) or as a list of structured blocks. This module models the block
@@ -19,20 +19,27 @@ from typing import Any, Optional, Union
 from ..types import (
     InputMediaAnimation,
     InputMediaAudio,
+    InputMediaDocument,
     InputMediaPhoto,
     InputMediaVideo,
     InputMediaVoiceNote,
+    RichBlockCaption as RichBlockCaption,
+    RichBlockTableCell as RichBlockTableCell,
+    RichMessageButton as RichMessageButton,
+    RichTextValue,
 )
 
 #: Formatted text of a block. The Bot API accepts a plain string, a list of
 #: rich text, or a nested rich-text object; a string covers the common case.
-RichText = Union[str, list[Any], dict[str, Any]]
+#: Received text parses into a RichTextNode, which the alias also covers.
+RichText = RichTextValue
 
 #: The media an InputRichMessageMedia can carry (a rich message references it
-#: from an html or markdown tg://…?id= link).
+#: from an html or markdown tg://…?id= link, including tg://document?id=).
 InputRichMedia = Union[
     InputMediaAnimation,
     InputMediaAudio,
+    InputMediaDocument,
     InputMediaPhoto,
     InputMediaVideo,
     InputMediaVoiceNote,
@@ -55,41 +62,6 @@ def _data(value: Any) -> Any:
 def _prune(d: dict[str, Any]) -> dict[str, Any]:
     """Drop keys whose value is None so unset optionals stay out of the payload."""
     return {k: v for k, v in d.items() if v is not None}
-
-
-@dataclass(slots=True)
-class RichBlockCaption:
-    """Caption of a rich block, with an optional cite-style credit."""
-
-    text: RichText
-    credit: Optional[RichText] = None
-
-    def to_dict(self) -> dict[str, Any]:
-        return _prune({"text": _data(self.text), "credit": _data(self.credit)})
-
-
-@dataclass(slots=True)
-class RichBlockTableCell:
-    """One cell of a table block. An empty cell (no text) renders invisible."""
-
-    text: Optional[RichText] = None
-    is_header: Optional[bool] = None
-    colspan: Optional[int] = None
-    rowspan: Optional[int] = None
-    align: Optional[str] = None
-    valign: Optional[str] = None
-
-    def to_dict(self) -> dict[str, Any]:
-        return _prune(
-            {
-                "text": _data(self.text),
-                "is_header": self.is_header,
-                "colspan": self.colspan,
-                "rowspan": self.rowspan,
-                "align": self.align,
-                "valign": self.valign,
-            }
-        )
 
 
 @dataclass(slots=True)
@@ -233,6 +205,23 @@ class InputRichBlockBlockQuotation:
 
 
 @dataclass(slots=True)
+class InputRichBlockExpandableBlockQuotation:
+    """A block quotation the reader can expand and collapse again."""
+
+    text: RichText
+    credit: Optional[RichText] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return _prune(
+            {
+                "type": "expandable_blockquote",
+                "text": _data(self.text),
+                "credit": _data(self.credit),
+            }
+        )
+
+
+@dataclass(slots=True)
 class InputRichBlockPullQuotation:
     """A pull quotation with centered text."""
 
@@ -286,6 +275,7 @@ class InputRichBlockTable:
     cells: list[list[RichBlockTableCell]]
     is_bordered: Optional[bool] = None
     is_striped: Optional[bool] = None
+    is_compact: Optional[bool] = None
     caption: Optional[RichText] = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -295,6 +285,7 @@ class InputRichBlockTable:
                 "cells": _data(self.cells),
                 "is_bordered": self.is_bordered,
                 "is_striped": self.is_striped,
+                "is_compact": self.is_compact,
                 "caption": _data(self.caption),
             }
         )
@@ -432,6 +423,44 @@ class InputRichBlockVoiceNote:
 
 
 @dataclass(slots=True)
+class InputRichBlockDocument:
+    """A block holding a general file. The media's own caption is ignored.
+
+    A rich message may also reference an uploaded file from its html or
+    markdown text with a tg://document?id= link.
+    """
+
+    document: Union[InputMediaDocument, dict[str, Any]]
+    caption: Optional[RichBlockCaption] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return _prune(
+            {
+                "type": "document",
+                "document": _data(self.document),
+                "caption": _data(self.caption),
+            }
+        )
+
+
+@dataclass(slots=True)
+class InputRichBlockButtons:
+    """A row of 1-8 buttons. align is "left", "center", or "right"."""
+
+    buttons: list[RichMessageButton]
+    align: Optional[str] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return _prune(
+            {
+                "type": "buttons",
+                "buttons": _data(self.buttons),
+                "align": self.align,
+            }
+        )
+
+
+@dataclass(slots=True)
 class InputRichBlockThinking:
     """A "Thinking…" placeholder. Valid only in send_rich_message_draft."""
 
@@ -453,6 +482,7 @@ InputRichBlock = Union[
     InputRichBlockAnchor,
     InputRichBlockList,
     InputRichBlockBlockQuotation,
+    InputRichBlockExpandableBlockQuotation,
     InputRichBlockPullQuotation,
     InputRichBlockCollage,
     InputRichBlockSlideshow,
@@ -464,6 +494,8 @@ InputRichBlock = Union[
     InputRichBlockPhoto,
     InputRichBlockVideo,
     InputRichBlockVoiceNote,
+    InputRichBlockDocument,
+    InputRichBlockButtons,
     InputRichBlockThinking,
     dict[str, Any],
 ]

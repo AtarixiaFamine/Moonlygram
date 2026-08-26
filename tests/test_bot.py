@@ -187,3 +187,19 @@ class TestBotConfiguration:
         bot3, _ = fake_bot({"short_description": "Short"})
         short = await bot3.get_my_short_description()
         assert isinstance(short, BotShortDescription) and short.short_description == "Short"
+
+
+async def test_send_message_draft_streams_and_offers_a_stop_control():
+    bot, session = fake_bot(True)
+    ok = await bot.send_message_draft(5, 3, text="partial", can_stop=True)
+    assert ok is True
+    method, params = session.calls[0]
+    assert method == "sendMessageDraft"
+    assert params == {"chat_id": 5, "draft_id": 3, "text": "partial", "can_stop": True}
+
+
+async def test_send_message_draft_clears_with_empty_text():
+    bot, session = fake_bot(True)
+    await bot.send_message_draft(5, 3, text="")
+    _, params = session.calls[0]
+    assert params["text"] == ""

@@ -2,7 +2,7 @@
 
 Rich messages are this library's headline feature. Build one with RichMessage
 plus the inline helpers, convert existing Markdown with markdown_to_rich, or
-describe it as a list of InputRichBlock* structured blocks (Bot API 10.2);
+describe it as a list of InputRichBlock* structured blocks (Bot API 10.2, extended in 10.3);
 every form feeds Bot.send_rich_message.
 """
 from __future__ import annotations
@@ -13,9 +13,12 @@ from .blocks import (
     InputRichBlockAnimation,
     InputRichBlockAudio,
     InputRichBlockBlockQuotation,
+    InputRichBlockButtons,
     InputRichBlockCollage,
     InputRichBlockDetails,
     InputRichBlockDivider,
+    InputRichBlockDocument,
+    InputRichBlockExpandableBlockQuotation,
     InputRichBlockFooter,
     InputRichBlockList,
     InputRichBlockListItem,
@@ -34,6 +37,7 @@ from .blocks import (
     InputRichMessageMedia,
     RichBlockCaption,
     RichBlockTableCell,
+    RichMessageButton,
     RichText,
 )
 from .builder import (
@@ -76,6 +80,7 @@ __all__ = [
     "RichText",
     "RichBlockCaption",
     "RichBlockTableCell",
+    "RichMessageButton",
     "InputRichMessageMedia",
     "InputRichBlockListItem",
     "InputRichBlock",
@@ -88,6 +93,7 @@ __all__ = [
     "InputRichBlockAnchor",
     "InputRichBlockList",
     "InputRichBlockBlockQuotation",
+    "InputRichBlockExpandableBlockQuotation",
     "InputRichBlockPullQuotation",
     "InputRichBlockCollage",
     "InputRichBlockSlideshow",
@@ -99,5 +105,7 @@ __all__ = [
     "InputRichBlockPhoto",
     "InputRichBlockVideo",
     "InputRichBlockVoiceNote",
+    "InputRichBlockDocument",
+    "InputRichBlockButtons",
     "InputRichBlockThinking",
 ]
