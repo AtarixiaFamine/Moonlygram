@@ -22,6 +22,8 @@ The handler types:
 - `InlineQueryHandler`, `ChosenInlineResultHandler` — inline mode.
 - `ChatMemberHandler`, `ChatJoinRequestHandler` — membership changes.
 - `PollHandler`, `PollAnswerHandler`, `MessageReactionHandler`, `ChatBoostHandler`.
+- `MessageGenerationStoppedHandler` — a reader stopped a streaming draft.
+- `BotSubscriptionHandler` — a user's payment subscription to the bot changed.
 - `TypeHandler(Update, cb)` — every update (or a predicate).
 - `ConversationHandler` — multi-step flows (see [Conversations](conversations.md)).
 

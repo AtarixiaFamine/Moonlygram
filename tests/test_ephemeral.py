@@ -1,8 +1,9 @@
-"""Tests for Bot API 10.2 ephemeral messages."""
+"""Tests for ephemeral messages (Bot API 10.2, reshaped in 10.3)."""
 from __future__ import annotations
 
 from moonlygram import (
     BotCommand,
+    EphemeralMessageParameters,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     InputMediaPhoto,
@@ -20,15 +21,49 @@ async def test_send_message_carries_ephemeral_params():
     await bot.send_message(
         1,
         "hi",
-        receiver_user_id=99,
-        callback_query_id="cb",
+        ephemeral_message_parameters=EphemeralMessageParameters(
+            receiver_user_id=99, callback_query_id="cb"
+        ),
         reply_parameters=ReplyParameters(ephemeral_message_id=7),
     )
     method, params = session.calls[0]
     assert method == "sendMessage"
-    assert params["receiver_user_id"] == 99
-    assert params["callback_query_id"] == "cb"
+    assert params["ephemeral_message_parameters"] == {
+        "receiver_user_id": 99,
+        "callback_query_id": "cb",
+    }
     assert params["reply_parameters"] == {"ephemeral_message_id": 7}
+
+
+async def test_replace_callback_query_message_reaches_the_wire():
+    bot, session = fake_bot(_MESSAGE_DICT)
+    await bot.send_photo(
+        1,
+        "file123",
+        ephemeral_message_parameters=EphemeralMessageParameters(
+            receiver_user_id=99,
+            callback_query_id="cb",
+            replace_callback_query_message=True,
+        ),
+    )
+    _, params = session.calls[0]
+    assert params["ephemeral_message_parameters"]["replace_callback_query_message"]
+
+
+async def test_send_rich_message_takes_ephemeral_parameters():
+    bot, session = fake_bot(_MESSAGE_DICT)
+    await bot.send_rich_message(
+        1,
+        html="<b>hi</b>",
+        ephemeral_message_parameters=EphemeralMessageParameters(receiver_user_id=99),
+    )
+    method, params = session.calls[0]
+    assert method == "sendRichMessage"
+    assert params["ephemeral_message_parameters"] == {"receiver_user_id": 99}
+
+
+def test_ephemeral_message_parameters_drops_unset_fields():
+    assert EphemeralMessageParameters(9).to_dict() == {"receiver_user_id": 9}
 
 
 def test_reply_parameters_drops_unset_fields():
@@ -64,6 +99,27 @@ async def test_edit_ephemeral_message_media_serializes_media():
     assert params["media"] == {"type": "photo", "media": "file123"}
     assert params["receiver_user_id"] == 99
     assert params["ephemeral_message_id"] == 7
+
+
+async def test_edit_ephemeral_message_caption_above_media():
+    bot, session = fake_bot(True)
+    ok = await bot.edit_ephemeral_message_caption(
+        1, 99, 7, caption="c", show_caption_above_media=True
+    )
+    assert ok is True
+    _, params = session.calls[0]
+    assert params["show_caption_above_media"] is True
+
+
+async def test_edit_ephemeral_rich_message_text():
+    bot, session = fake_bot(True)
+    ok = await bot.edit_ephemeral_rich_message_text(1, 99, 7, html="<b>hi</b>")
+    assert ok is True
+    method, params = session.calls[0]
+    assert method == "editEphemeralMessageText"
+    assert params["receiver_user_id"] == 99
+    assert params["ephemeral_message_id"] == 7
+    assert params["rich_message"] == {"html": "<b>hi</b>"}
 
 
 async def test_edit_ephemeral_message_caption():

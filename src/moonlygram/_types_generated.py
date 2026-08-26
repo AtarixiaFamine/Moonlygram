@@ -1,6 +1,6 @@
 """Generated Bot API data types — do not edit by hand.
 
-Produced by codegen/gen_types.py from Bot API 10.1.
+Produced by codegen/gen_types.py from Bot API 10.3.
 Edit codegen/overrides.py and re-run the generator instead.
 """
 from __future__ import annotations
@@ -12,9 +12,15 @@ from .types import (  # noqa: E402
     Chat as Chat,
     MaskPosition as MaskPosition,
     ReactionType as ReactionType,
+    RichBlockCaption as RichBlockCaption,
+    RichBlockTableCell as RichBlockTableCell,
+    RichMessageButton as RichMessageButton,
+    RichTextValue as RichTextValue,
     User as User,
     _reaction_type as _reaction_type,
     _reactions as _reactions,
+    _rich_caption as _rich_caption,
+    _rich_text as _rich_text,
 )
 
 
@@ -206,6 +212,35 @@ class BotShortDescription:
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {
             "short_description": self.short_description,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class BotSubscriptionUpdated:
+    """This object contains information about changes to a user payment subscription
+    toward the current bot.
+    """
+
+    user: User
+    invoice_payload: str
+    state: str
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "BotSubscriptionUpdated":
+        return cls(
+            user=User.from_dict(d["user"]) if "user" in d else None,
+            invoice_payload=d.get("invoice_payload"),
+            state=d.get("state"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "user": self.user,
+            "invoice_payload": self.invoice_payload,
+            "state": self.state,
         }
         return {k: v for k, v in d.items() if v is not None}
 
@@ -409,6 +444,7 @@ class ChatMember:
     can_manage_topics: Optional[bool] = None
     can_manage_direct_messages: Optional[bool] = None
     can_manage_tags: Optional[bool] = None
+    can_send_welcome_messages: Optional[bool] = None
     tag: Optional[str] = None
     until_date: Optional[int] = None
     is_member: Optional[bool] = None
@@ -450,6 +486,7 @@ class ChatMember:
             can_manage_topics=d.get("can_manage_topics"),
             can_manage_direct_messages=d.get("can_manage_direct_messages"),
             can_manage_tags=d.get("can_manage_tags"),
+            can_send_welcome_messages=d.get("can_send_welcome_messages"),
             tag=d.get("tag"),
             until_date=d.get("until_date"),
             is_member=d.get("is_member"),
@@ -491,6 +528,7 @@ class ChatMember:
             "can_manage_topics": self.can_manage_topics,
             "can_manage_direct_messages": self.can_manage_direct_messages,
             "can_manage_tags": self.can_manage_tags,
+            "can_send_welcome_messages": self.can_send_welcome_messages,
             "tag": self.tag,
             "until_date": self.until_date,
             "is_member": self.is_member,
@@ -548,6 +586,94 @@ class ChatMemberUpdated:
             "invite_link": self.invite_link,
             "via_join_request": self.via_join_request,
             "via_chat_folder_invite_link": self.via_chat_folder_invite_link,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class Community:
+    """Represents a community (a group of chats)."""
+
+    id: int
+    name: str
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "Community":
+        return cls(
+            id=d.get("id"),
+            name=d.get("name"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "id": self.id,
+            "name": self.name,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class CommunityChatAdded:
+    """Describes a service message about a chat or a bot being added to a community."""
+
+    community: Community
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "CommunityChatAdded":
+        return cls(
+            community=Community.from_dict(d["community"]) if "community" in d else None,
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "community": self.community,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class CommunityChatJoined:
+    """Describes a service message about a chat being joined by a user from a
+    community.
+    """
+
+    community: Community
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "CommunityChatJoined":
+        return cls(
+            community=Community.from_dict(d["community"]) if "community" in d else None,
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "community": self.community,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class CommunityChatRemoved:
+    """Describes a service message about a chat or a bot being removed from a
+    community. Currently holds no information.
+    """
+
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "CommunityChatRemoved":
+        return cls(
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
         }
         return {k: v for k, v in d.items() if v is not None}
 
@@ -748,6 +874,48 @@ class Invoice:
 
 
 @dataclass(slots=True)
+class LivePhoto:
+    """This object represents a live photo."""
+
+    file_id: str
+    file_unique_id: str
+    width: int
+    height: int
+    duration: int
+    photo: Optional[list[PhotoSize]] = None
+    mime_type: Optional[str] = None
+    file_size: Optional[int] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "LivePhoto":
+        return cls(
+            file_id=d.get("file_id"),
+            file_unique_id=d.get("file_unique_id"),
+            width=d.get("width"),
+            height=d.get("height"),
+            duration=d.get("duration"),
+            photo=[PhotoSize.from_dict(i) for i in d["photo"]] if "photo" in d else None,
+            mime_type=d.get("mime_type"),
+            file_size=d.get("file_size"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "file_id": self.file_id,
+            "file_unique_id": self.file_unique_id,
+            "width": self.width,
+            "height": self.height,
+            "duration": self.duration,
+            "photo": self.photo,
+            "mime_type": self.mime_type,
+            "file_size": self.file_size,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
 class Location:
     """This object represents a point on the map."""
 
@@ -826,6 +994,33 @@ class MessageEntity:
             "custom_emoji_id": self.custom_emoji_id,
             "unix_time": self.unix_time,
             "date_time_format": self.date_time_format,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class MessageGenerationStopped:
+    """This object describes an update about a user stopping message generation."""
+
+    chat: Chat
+    draft_id: int
+    message_thread_id: Optional[int] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "MessageGenerationStopped":
+        return cls(
+            chat=Chat.from_dict(d["chat"]) if "chat" in d else None,
+            draft_id=d.get("draft_id"),
+            message_thread_id=d.get("message_thread_id"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "chat": self.chat,
+            "draft_id": self.draft_id,
+            "message_thread_id": self.message_thread_id,
         }
         return {k: v for k, v in d.items() if v is not None}
 
@@ -1274,6 +1469,267 @@ class RevenueWithdrawalState:
 
 
 @dataclass(slots=True)
+class RichBlock:
+    """This object represents a block in a rich formatted message. Currently, it can
+    be any of the following types: - RichBlockParagraph - RichBlockSectionHeading -
+    RichBlockPreformatted - RichBlockFooter - RichBlockDivider -
+    RichBlockMathematicalExpression - RichBlockAnchor - RichBlockList -
+    RichBlockBlockQuotation - RichBlockExpandableBlockQuotation -
+    RichBlockPullQuotation - RichBlockCollage - RichBlockSlideshow - RichBlockTable
+    - RichBlockDetails - RichBlockMap - RichBlockButtons - RichBlockAnimation -
+    RichBlockAudio - RichBlockDocument - RichBlockPhoto - RichBlockVideo -
+    RichBlockVoiceNote - RichBlockThinking
+    """
+
+    type: str
+    text: Optional[RichTextValue] = None
+    size: Optional[int] = None
+    language: Optional[str] = None
+    expression: Optional[str] = None
+    name: Optional[str] = None
+    items: Optional[list[RichBlockListItem]] = None
+    blocks: Optional[list[RichBlock]] = None
+    credit: Optional[RichTextValue] = None
+    caption: Optional[RichBlockCaption | RichTextValue] = None
+    cells: Optional[list[list[RichBlockTableCell]]] = None
+    is_bordered: Optional[bool] = None
+    is_striped: Optional[bool] = None
+    is_compact: Optional[bool] = None
+    summary: Optional[RichTextValue] = None
+    is_open: Optional[bool] = None
+    location: Optional[Location] = None
+    zoom: Optional[int] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    buttons: Optional[list[RichMessageButton]] = None
+    align: Optional[str] = None
+    animation: Optional[Animation] = None
+    has_spoiler: Optional[bool] = None
+    audio: Optional[Audio] = None
+    document: Optional[Document] = None
+    photo: Optional[list[PhotoSize]] = None
+    video: Optional[Video] = None
+    voice_note: Optional[Voice] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "RichBlock":
+        return cls(
+            type=d.get("type"),
+            text=_rich_text(d.get("text")),
+            size=d.get("size"),
+            language=d.get("language"),
+            expression=d.get("expression"),
+            name=d.get("name"),
+            items=[RichBlockListItem.from_dict(i) for i in d["items"]] if "items" in d else None,
+            blocks=[RichBlock.from_dict(i) for i in d["blocks"]] if "blocks" in d else None,
+            credit=_rich_text(d.get("credit")),
+            caption=_rich_caption(d.get("caption")),
+            cells=[[RichBlockTableCell.from_dict(j) for j in i] for i in d["cells"]] if "cells" in d else None,
+            is_bordered=d.get("is_bordered"),
+            is_striped=d.get("is_striped"),
+            is_compact=d.get("is_compact"),
+            summary=_rich_text(d.get("summary")),
+            is_open=d.get("is_open"),
+            location=Location.from_dict(d["location"]) if "location" in d else None,
+            zoom=d.get("zoom"),
+            width=d.get("width"),
+            height=d.get("height"),
+            buttons=[RichMessageButton.from_dict(i) for i in d["buttons"]] if "buttons" in d else None,
+            align=d.get("align"),
+            animation=Animation.from_dict(d["animation"]) if "animation" in d else None,
+            has_spoiler=d.get("has_spoiler"),
+            audio=Audio.from_dict(d["audio"]) if "audio" in d else None,
+            document=Document.from_dict(d["document"]) if "document" in d else None,
+            photo=[PhotoSize.from_dict(i) for i in d["photo"]] if "photo" in d else None,
+            video=Video.from_dict(d["video"]) if "video" in d else None,
+            voice_note=Voice.from_dict(d["voice_note"]) if "voice_note" in d else None,
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "type": self.type,
+            "text": self.text,
+            "size": self.size,
+            "language": self.language,
+            "expression": self.expression,
+            "name": self.name,
+            "items": self.items,
+            "blocks": self.blocks,
+            "credit": self.credit,
+            "caption": self.caption,
+            "cells": self.cells,
+            "is_bordered": self.is_bordered,
+            "is_striped": self.is_striped,
+            "is_compact": self.is_compact,
+            "summary": self.summary,
+            "is_open": self.is_open,
+            "location": self.location,
+            "zoom": self.zoom,
+            "width": self.width,
+            "height": self.height,
+            "buttons": self.buttons,
+            "align": self.align,
+            "animation": self.animation,
+            "has_spoiler": self.has_spoiler,
+            "audio": self.audio,
+            "document": self.document,
+            "photo": self.photo,
+            "video": self.video,
+            "voice_note": self.voice_note,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class RichBlockListItem:
+    """An item of a list."""
+
+    label: str
+    blocks: list[RichBlock]
+    has_checkbox: Optional[bool] = None
+    is_checked: Optional[bool] = None
+    value: Optional[int] = None
+    type: Optional[str] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "RichBlockListItem":
+        return cls(
+            label=d.get("label"),
+            blocks=[RichBlock.from_dict(i) for i in d["blocks"]] if "blocks" in d else None,
+            has_checkbox=d.get("has_checkbox"),
+            is_checked=d.get("is_checked"),
+            value=d.get("value"),
+            type=d.get("type"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "label": self.label,
+            "blocks": self.blocks,
+            "has_checkbox": self.has_checkbox,
+            "is_checked": self.is_checked,
+            "value": self.value,
+            "type": self.type,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class RichMessage:
+    """Rich formatted message."""
+
+    blocks: list[RichBlock]
+    is_rtl: Optional[bool] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "RichMessage":
+        return cls(
+            blocks=[RichBlock.from_dict(i) for i in d["blocks"]] if "blocks" in d else None,
+            is_rtl=d.get("is_rtl"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "blocks": self.blocks,
+            "is_rtl": self.is_rtl,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class RichText:
+    """This object represents a rich formatted text. Currently, it can be either a
+    String for plain text, an Array of RichText, or any of the following types: -
+    RichTextBold - RichTextItalic - RichTextUnderline - RichTextStrikethrough -
+    RichTextSpoiler - RichTextDateTime - RichTextTextMention - RichTextSubscript -
+    RichTextSuperscript - RichTextMarked - RichTextCode - RichTextCustomEmoji -
+    RichTextMathematicalExpression - RichTextUrl - RichTextEmailAddress -
+    RichTextPhoneNumber - RichTextBankCardNumber - RichTextMention -
+    RichTextHashtag - RichTextCashtag - RichTextBotCommand - RichTextButton -
+    RichTextAnchor - RichTextAnchorLink - RichTextReference - RichTextReferenceLink
+    """
+
+    type: str
+    text: Optional[RichTextValue] = None
+    unix_time: Optional[int] = None
+    date_time_format: Optional[str] = None
+    user: Optional[User] = None
+    custom_emoji_id: Optional[str] = None
+    alternative_text: Optional[str] = None
+    expression: Optional[str] = None
+    url: Optional[str] = None
+    email_address: Optional[str] = None
+    phone_number: Optional[str] = None
+    bank_card_number: Optional[str] = None
+    username: Optional[str] = None
+    hashtag: Optional[str] = None
+    cashtag: Optional[str] = None
+    bot_command: Optional[str] = None
+    button: Optional[RichMessageButton] = None
+    name: Optional[str] = None
+    anchor_name: Optional[str] = None
+    reference_name: Optional[str] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "RichText":
+        return cls(
+            type=d.get("type"),
+            text=_rich_text(d.get("text")),
+            unix_time=d.get("unix_time"),
+            date_time_format=d.get("date_time_format"),
+            user=User.from_dict(d["user"]) if "user" in d else None,
+            custom_emoji_id=d.get("custom_emoji_id"),
+            alternative_text=d.get("alternative_text"),
+            expression=d.get("expression"),
+            url=d.get("url"),
+            email_address=d.get("email_address"),
+            phone_number=d.get("phone_number"),
+            bank_card_number=d.get("bank_card_number"),
+            username=d.get("username"),
+            hashtag=d.get("hashtag"),
+            cashtag=d.get("cashtag"),
+            bot_command=d.get("bot_command"),
+            button=RichMessageButton.from_dict(d["button"]) if "button" in d else None,
+            name=d.get("name"),
+            anchor_name=d.get("anchor_name"),
+            reference_name=d.get("reference_name"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "type": self.type,
+            "text": self.text,
+            "unix_time": self.unix_time,
+            "date_time_format": self.date_time_format,
+            "user": self.user,
+            "custom_emoji_id": self.custom_emoji_id,
+            "alternative_text": self.alternative_text,
+            "expression": self.expression,
+            "url": self.url,
+            "email_address": self.email_address,
+            "phone_number": self.phone_number,
+            "bank_card_number": self.bank_card_number,
+            "username": self.username,
+            "hashtag": self.hashtag,
+            "cashtag": self.cashtag,
+            "bot_command": self.bot_command,
+            "button": self.button,
+            "name": self.name,
+            "anchor_name": self.anchor_name,
+            "reference_name": self.reference_name,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
 class SentWebAppMessage:
     """Describes an inline message sent by a Web App on behalf of a user."""
 
@@ -1632,6 +2088,260 @@ class TransactionPartner:
 
 
 @dataclass(slots=True)
+class UniqueGift:
+    """This object describes a unique gift that was upgraded from a regular gift."""
+
+    gift_id: str
+    base_name: str
+    name: str
+    number: int
+    model: UniqueGiftModel
+    symbol: UniqueGiftSymbol
+    backdrop: UniqueGiftBackdrop
+    is_premium: Optional[bool] = None
+    is_burned: Optional[bool] = None
+    is_from_blockchain: Optional[bool] = None
+    colors: Optional[UniqueGiftColors] = None
+    publisher_chat: Optional[Chat] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "UniqueGift":
+        return cls(
+            gift_id=d.get("gift_id"),
+            base_name=d.get("base_name"),
+            name=d.get("name"),
+            number=d.get("number"),
+            model=UniqueGiftModel.from_dict(d["model"]) if "model" in d else None,
+            symbol=UniqueGiftSymbol.from_dict(d["symbol"]) if "symbol" in d else None,
+            backdrop=UniqueGiftBackdrop.from_dict(d["backdrop"]) if "backdrop" in d else None,
+            is_premium=d.get("is_premium"),
+            is_burned=d.get("is_burned"),
+            is_from_blockchain=d.get("is_from_blockchain"),
+            colors=UniqueGiftColors.from_dict(d["colors"]) if "colors" in d else None,
+            publisher_chat=Chat.from_dict(d["publisher_chat"]) if "publisher_chat" in d else None,
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "gift_id": self.gift_id,
+            "base_name": self.base_name,
+            "name": self.name,
+            "number": self.number,
+            "model": self.model,
+            "symbol": self.symbol,
+            "backdrop": self.backdrop,
+            "is_premium": self.is_premium,
+            "is_burned": self.is_burned,
+            "is_from_blockchain": self.is_from_blockchain,
+            "colors": self.colors,
+            "publisher_chat": self.publisher_chat,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class UniqueGiftBackdrop:
+    """This object describes the backdrop of a unique gift."""
+
+    name: str
+    colors: UniqueGiftBackdropColors
+    rarity_per_mille: int
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "UniqueGiftBackdrop":
+        return cls(
+            name=d.get("name"),
+            colors=UniqueGiftBackdropColors.from_dict(d["colors"]) if "colors" in d else None,
+            rarity_per_mille=d.get("rarity_per_mille"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "name": self.name,
+            "colors": self.colors,
+            "rarity_per_mille": self.rarity_per_mille,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class UniqueGiftBackdropColors:
+    """This object describes the colors of the backdrop of a unique gift."""
+
+    center_color: int
+    edge_color: int
+    symbol_color: int
+    text_color: int
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "UniqueGiftBackdropColors":
+        return cls(
+            center_color=d.get("center_color"),
+            edge_color=d.get("edge_color"),
+            symbol_color=d.get("symbol_color"),
+            text_color=d.get("text_color"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "center_color": self.center_color,
+            "edge_color": self.edge_color,
+            "symbol_color": self.symbol_color,
+            "text_color": self.text_color,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class UniqueGiftColors:
+    """This object contains information about the color scheme for a user's name,
+    message replies and link previews based on a unique gift.
+    """
+
+    model_custom_emoji_id: str
+    symbol_custom_emoji_id: str
+    light_theme_main_color: int
+    light_theme_other_colors: list[int]
+    dark_theme_main_color: int
+    dark_theme_other_colors: list[int]
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "UniqueGiftColors":
+        return cls(
+            model_custom_emoji_id=d.get("model_custom_emoji_id"),
+            symbol_custom_emoji_id=d.get("symbol_custom_emoji_id"),
+            light_theme_main_color=d.get("light_theme_main_color"),
+            light_theme_other_colors=d.get("light_theme_other_colors"),
+            dark_theme_main_color=d.get("dark_theme_main_color"),
+            dark_theme_other_colors=d.get("dark_theme_other_colors"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "model_custom_emoji_id": self.model_custom_emoji_id,
+            "symbol_custom_emoji_id": self.symbol_custom_emoji_id,
+            "light_theme_main_color": self.light_theme_main_color,
+            "light_theme_other_colors": self.light_theme_other_colors,
+            "dark_theme_main_color": self.dark_theme_main_color,
+            "dark_theme_other_colors": self.dark_theme_other_colors,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class UniqueGiftInfo:
+    """Describes a service message about a unique gift that was sent or received."""
+
+    gift: UniqueGift
+    origin: str
+    text: Optional[str] = None
+    entities: Optional[list[MessageEntity]] = None
+    is_private: Optional[bool] = None
+    last_resale_currency: Optional[str] = None
+    last_resale_amount: Optional[int] = None
+    owned_gift_id: Optional[str] = None
+    transfer_star_count: Optional[int] = None
+    next_transfer_date: Optional[int] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "UniqueGiftInfo":
+        return cls(
+            gift=UniqueGift.from_dict(d["gift"]) if "gift" in d else None,
+            origin=d.get("origin"),
+            text=d.get("text"),
+            entities=[MessageEntity.from_dict(i) for i in d["entities"]] if "entities" in d else None,
+            is_private=d.get("is_private"),
+            last_resale_currency=d.get("last_resale_currency"),
+            last_resale_amount=d.get("last_resale_amount"),
+            owned_gift_id=d.get("owned_gift_id"),
+            transfer_star_count=d.get("transfer_star_count"),
+            next_transfer_date=d.get("next_transfer_date"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "gift": self.gift,
+            "origin": self.origin,
+            "text": self.text,
+            "entities": self.entities,
+            "is_private": self.is_private,
+            "last_resale_currency": self.last_resale_currency,
+            "last_resale_amount": self.last_resale_amount,
+            "owned_gift_id": self.owned_gift_id,
+            "transfer_star_count": self.transfer_star_count,
+            "next_transfer_date": self.next_transfer_date,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class UniqueGiftModel:
+    """This object describes the model of a unique gift."""
+
+    name: str
+    sticker: Sticker
+    rarity_per_mille: int
+    rarity: Optional[str] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "UniqueGiftModel":
+        return cls(
+            name=d.get("name"),
+            sticker=Sticker.from_dict(d["sticker"]) if "sticker" in d else None,
+            rarity_per_mille=d.get("rarity_per_mille"),
+            rarity=d.get("rarity"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "name": self.name,
+            "sticker": self.sticker,
+            "rarity_per_mille": self.rarity_per_mille,
+            "rarity": self.rarity,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class UniqueGiftSymbol:
+    """This object describes the symbol shown on the pattern of a unique gift."""
+
+    name: str
+    sticker: Sticker
+    rarity_per_mille: int
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "UniqueGiftSymbol":
+        return cls(
+            name=d.get("name"),
+            sticker=Sticker.from_dict(d["sticker"]) if "sticker" in d else None,
+            rarity_per_mille=d.get("rarity_per_mille"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "name": self.name,
+            "sticker": self.sticker,
+            "rarity_per_mille": self.rarity_per_mille,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
 class UserChatBoosts:
     """This object represents a list of boosts added to a chat by a user."""
 
@@ -1771,9 +2481,7 @@ class Video:
 
 @dataclass(slots=True)
 class VideoNote:
-    """This object represents a video message (available in Telegram apps as of
-    v.4.0).
-    """
+    """This object represents a video message."""
 
     file_id: str
     file_unique_id: str

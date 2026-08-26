@@ -8,9 +8,8 @@ parameter the spec defines, or when a spec method is neither modelled nor
 recorded as an explicit decision.
 
 The check is one-directional: every spec parameter must appear in the
-signature, but a signature may carry extras. The library models Bot API 10.2
-while the vendored spec is 10.1, and a few parameters are deliberately exposed
-under friendlier names (see DIVERGENCES).
+signature, but a signature may carry extras, and a few parameters are
+deliberately exposed under friendlier names (see DIVERGENCES).
 """
 from __future__ import annotations
 
@@ -39,6 +38,11 @@ DIVERGENCES: dict[str, dict[str, str]] = {
     "edit_message_text": {
         "rich_message": "exposed as the separate edit_rich_message_text method",
     },
+    "edit_ephemeral_message_text": {
+        "rich_message": (
+            "exposed as the separate edit_ephemeral_rich_message_text method"
+        ),
+    },
 }
 
 # Bot attributes whose name matches a spec method but means something else.
@@ -65,7 +69,6 @@ UNIMPLEMENTED = {
     "editStory",
     "deleteStory",
     "repostStory",
-    "sendLivePhoto",
     # business accounts and connections
     "getBusinessConnection",
     "readBusinessMessage",
@@ -119,8 +122,6 @@ UNIMPLEMENTED = {
     "sendChatJoinRequestWebApp",
     "answerChatJoinRequestQuery",
     "answerGuestQuery",
-    # drafts
-    "sendMessageDraft",
     # managed bots
     "getManagedBotAccessSettings",
     "setManagedBotAccessSettings",

@@ -21,6 +21,7 @@ from .types import (
     ChatInviteLink,
     ChatMember,
     ChatPermissions,
+    EphemeralMessageParameters,
     File,
     FileInput,
     ForumTopic,
@@ -160,8 +161,7 @@ class Bot:
         suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_to_message_id: Optional[int] = None,
         reply_markup: Optional[ReplyMarkup] = None,
-        receiver_user_id: Optional[int] = None,
-        callback_query_id: Optional[str] = None,
+        ephemeral_message_parameters: Optional[EphemeralMessageParameters] = None,
         reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a text message to a chat.
@@ -188,9 +188,42 @@ class Bot:
                 suggested_post_parameters=suggested_post_parameters,
                 reply_to_message_id=reply_to_message_id,
                 reply_markup=reply_markup,
-                receiver_user_id=receiver_user_id,
-                callback_query_id=callback_query_id,
+                ephemeral_message_parameters=ephemeral_message_parameters,
                 reply_parameters=reply_parameters,
+            )
+        )
+
+    async def send_message_draft(
+        self,
+        chat_id: int,
+        draft_id: int,
+        *,
+        text: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        parse_mode: Optional[str] = None,
+        entities: Optional[list[MessageEntity]] = None,
+        can_stop: Optional[bool] = None,
+        keep_on_stop: Optional[bool] = None,
+    ) -> bool:
+        """Send an ephemeral plain-text draft (about a 30s TTL). Returns True.
+
+        Use this to stream a response by repeatedly updating the same draft_id;
+        send the final version with send_message. Empty text clears the draft.
+        can_stop offers the user a control to stop the generation, which arrives
+        as a stopped_message_generation update; keep_on_stop leaves the text
+        already written in place when they do.
+        """
+        return bool(
+            await self._call(
+                "sendMessageDraft",
+                chat_id=chat_id,
+                draft_id=draft_id,
+                text=text,
+                message_thread_id=message_thread_id,
+                parse_mode=parse_mode,
+                entities=entities,
+                can_stop=can_stop,
+                keep_on_stop=keep_on_stop,
             )
         )
 
@@ -238,6 +271,7 @@ class Bot:
         allow_paid_broadcast: Optional[bool] = None,
         message_effect_id: Optional[str] = None,
         suggested_post_parameters: Optional[SuggestedPostParameters] = None,
+        ephemeral_message_parameters: Optional[EphemeralMessageParameters] = None,
         reply_parameters: "Optional[ReplyParameters]" = None,
         reply_markup: Optional[ReplyMarkup] = None,
     ) -> Message:
@@ -261,6 +295,7 @@ class Bot:
                 allow_paid_broadcast=allow_paid_broadcast,
                 message_effect_id=message_effect_id,
                 suggested_post_parameters=suggested_post_parameters,
+                ephemeral_message_parameters=ephemeral_message_parameters,
                 reply_parameters=reply_parameters,
                 reply_markup=reply_markup,
             )
@@ -276,12 +311,16 @@ class Bot:
         blocks: "Optional[list[InputRichBlock]]" = None,
         media: "Optional[list[InputRichMessageMedia]]" = None,
         message_thread_id: Optional[int] = None,
+        can_stop: Optional[bool] = None,
+        keep_on_stop: Optional[bool] = None,
     ) -> bool:
         """Send an ephemeral rich-message draft (about a 30s TTL).
 
         Use this to stream a response by repeatedly updating the same draft_id;
         send the final version with send_rich_message. Pass exactly one of html,
-        markdown, or blocks.
+        markdown, or blocks. can_stop offers the user a control to stop the
+        generation, which arrives as a stopped_message_generation update;
+        keep_on_stop leaves the text already written in place when they do.
         """
         return bool(
             await self._call(
@@ -290,6 +329,8 @@ class Bot:
                 draft_id=draft_id,
                 rich_message=self._rich_message(html, markdown, blocks, media),
                 message_thread_id=message_thread_id,
+                can_stop=can_stop,
+                keep_on_stop=keep_on_stop,
             )
         )
 
@@ -313,8 +354,7 @@ class Bot:
         suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
-        receiver_user_id: Optional[int] = None,
-        callback_query_id: Optional[str] = None,
+        ephemeral_message_parameters: Optional[EphemeralMessageParameters] = None,
         reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a photo. Pass an InputFile to upload, or a file_id / URL string."""
@@ -338,8 +378,60 @@ class Bot:
                 suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
-                receiver_user_id=receiver_user_id,
-                callback_query_id=callback_query_id,
+                ephemeral_message_parameters=ephemeral_message_parameters,
+                reply_parameters=reply_parameters,
+            )
+        )
+
+    async def send_live_photo(
+        self,
+        chat_id: int | str,
+        live_photo: FileInput,
+        photo: FileInput,
+        *,
+        business_connection_id: Optional[str] = None,
+        message_thread_id: Optional[int] = None,
+        direct_messages_topic_id: Optional[int] = None,
+        caption: Optional[str] = None,
+        parse_mode: Optional[str] = None,
+        caption_entities: Optional[list[MessageEntity]] = None,
+        show_caption_above_media: Optional[bool] = None,
+        has_spoiler: Optional[bool] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        suggested_post_parameters: Optional[SuggestedPostParameters] = None,
+        reply_markup: Optional[ReplyMarkup] = None,
+        ephemeral_message_parameters: Optional[EphemeralMessageParameters] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
+    ) -> Message:
+        """Send a live photo: a still image paired with its short video.
+
+        live_photo is the video part and photo the still; pass an InputFile to
+        upload either, or a file_id / URL string.
+        """
+        return Message.from_dict(
+            await self._call(
+                "sendLivePhoto",
+                chat_id=chat_id,
+                live_photo=live_photo,
+                photo=photo,
+                business_connection_id=business_connection_id,
+                message_thread_id=message_thread_id,
+                direct_messages_topic_id=direct_messages_topic_id,
+                caption=caption,
+                parse_mode=parse_mode,
+                caption_entities=caption_entities,
+                show_caption_above_media=show_caption_above_media,
+                has_spoiler=has_spoiler,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                suggested_post_parameters=suggested_post_parameters,
+                reply_markup=reply_markup,
+                ephemeral_message_parameters=ephemeral_message_parameters,
                 reply_parameters=reply_parameters,
             )
         )
@@ -364,8 +456,7 @@ class Bot:
         suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
-        receiver_user_id: Optional[int] = None,
-        callback_query_id: Optional[str] = None,
+        ephemeral_message_parameters: Optional[EphemeralMessageParameters] = None,
         reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a general file. Pass an InputFile to upload, or a file_id / URL."""
@@ -389,8 +480,7 @@ class Bot:
                 suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
-                receiver_user_id=receiver_user_id,
-                callback_query_id=callback_query_id,
+                ephemeral_message_parameters=ephemeral_message_parameters,
                 reply_parameters=reply_parameters,
             )
         )
@@ -417,8 +507,7 @@ class Bot:
         suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
-        receiver_user_id: Optional[int] = None,
-        callback_query_id: Optional[str] = None,
+        ephemeral_message_parameters: Optional[EphemeralMessageParameters] = None,
         reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send an audio file shown in the music player."""
@@ -444,8 +533,7 @@ class Bot:
                 suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
-                receiver_user_id=receiver_user_id,
-                callback_query_id=callback_query_id,
+                ephemeral_message_parameters=ephemeral_message_parameters,
                 reply_parameters=reply_parameters,
             )
         )
@@ -477,8 +565,7 @@ class Bot:
         suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
-        receiver_user_id: Optional[int] = None,
-        callback_query_id: Optional[str] = None,
+        ephemeral_message_parameters: Optional[EphemeralMessageParameters] = None,
         reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a video file.
@@ -513,8 +600,7 @@ class Bot:
                 suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
-                receiver_user_id=receiver_user_id,
-                callback_query_id=callback_query_id,
+                ephemeral_message_parameters=ephemeral_message_parameters,
                 reply_parameters=reply_parameters,
             )
         )
@@ -543,8 +629,7 @@ class Bot:
         suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
-        receiver_user_id: Optional[int] = None,
-        callback_query_id: Optional[str] = None,
+        ephemeral_message_parameters: Optional[EphemeralMessageParameters] = None,
         reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send an animation (GIF or soundless H.264/MPEG-4)."""
@@ -572,8 +657,7 @@ class Bot:
                 suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
-                receiver_user_id=receiver_user_id,
-                callback_query_id=callback_query_id,
+                ephemeral_message_parameters=ephemeral_message_parameters,
                 reply_parameters=reply_parameters,
             )
         )
@@ -597,8 +681,7 @@ class Bot:
         suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
-        receiver_user_id: Optional[int] = None,
-        callback_query_id: Optional[str] = None,
+        ephemeral_message_parameters: Optional[EphemeralMessageParameters] = None,
         reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a voice note."""
@@ -621,8 +704,7 @@ class Bot:
                 suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
-                receiver_user_id=receiver_user_id,
-                callback_query_id=callback_query_id,
+                ephemeral_message_parameters=ephemeral_message_parameters,
                 reply_parameters=reply_parameters,
             )
         )
@@ -645,8 +727,7 @@ class Bot:
         suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
-        receiver_user_id: Optional[int] = None,
-        callback_query_id: Optional[str] = None,
+        ephemeral_message_parameters: Optional[EphemeralMessageParameters] = None,
         reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a rounded square video note."""
@@ -668,8 +749,7 @@ class Bot:
                 suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
-                receiver_user_id=receiver_user_id,
-                callback_query_id=callback_query_id,
+                ephemeral_message_parameters=ephemeral_message_parameters,
                 reply_parameters=reply_parameters,
             )
         )
@@ -690,8 +770,7 @@ class Bot:
         suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
-        receiver_user_id: Optional[int] = None,
-        callback_query_id: Optional[str] = None,
+        ephemeral_message_parameters: Optional[EphemeralMessageParameters] = None,
         reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a sticker."""
@@ -711,8 +790,7 @@ class Bot:
                 suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
-                receiver_user_id=receiver_user_id,
-                callback_query_id=callback_query_id,
+                ephemeral_message_parameters=ephemeral_message_parameters,
                 reply_parameters=reply_parameters,
             )
         )
@@ -737,8 +815,7 @@ class Bot:
         suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
-        receiver_user_id: Optional[int] = None,
-        callback_query_id: Optional[str] = None,
+        ephemeral_message_parameters: Optional[EphemeralMessageParameters] = None,
         reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a point on the map.
@@ -766,8 +843,7 @@ class Bot:
                 suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
-                receiver_user_id=receiver_user_id,
-                callback_query_id=callback_query_id,
+                ephemeral_message_parameters=ephemeral_message_parameters,
                 reply_parameters=reply_parameters,
             )
         )
@@ -790,8 +866,7 @@ class Bot:
         suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
-        receiver_user_id: Optional[int] = None,
-        callback_query_id: Optional[str] = None,
+        ephemeral_message_parameters: Optional[EphemeralMessageParameters] = None,
         reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send a phone contact."""
@@ -813,8 +888,7 @@ class Bot:
                 suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
-                receiver_user_id=receiver_user_id,
-                callback_query_id=callback_query_id,
+                ephemeral_message_parameters=ephemeral_message_parameters,
                 reply_parameters=reply_parameters,
             )
         )
@@ -984,8 +1058,7 @@ class Bot:
         suggested_post_parameters: Optional[SuggestedPostParameters] = None,
         reply_markup: Optional[ReplyMarkup] = None,
         reply_to_message_id: Optional[int] = None,
-        receiver_user_id: Optional[int] = None,
-        callback_query_id: Optional[str] = None,
+        ephemeral_message_parameters: Optional[EphemeralMessageParameters] = None,
         reply_parameters: "Optional[ReplyParameters]" = None,
     ) -> Message:
         """Send information about a venue."""
@@ -1011,8 +1084,7 @@ class Bot:
                 suggested_post_parameters=suggested_post_parameters,
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
-                receiver_user_id=receiver_user_id,
-                callback_query_id=callback_query_id,
+                ephemeral_message_parameters=ephemeral_message_parameters,
                 reply_parameters=reply_parameters,
             )
         )
@@ -1457,11 +1529,14 @@ class Bot:
         text: str,
         *,
         parse_mode: Optional[str] = None,
+        entities: Optional[list[MessageEntity]] = None,
+        link_preview_options: Optional[LinkPreviewOptions] = None,
         reply_markup: Optional[ReplyMarkup] = None,
     ) -> bool:
         """Edit the text of an ephemeral message. Returns True on success.
 
-        The user may not receive the edit if they are offline.
+        The user may not receive the edit if they are offline. Pass rich
+        content with edit_ephemeral_rich_message_text instead.
         """
         return bool(
             await self._call(
@@ -1471,6 +1546,36 @@ class Bot:
                 ephemeral_message_id=ephemeral_message_id,
                 text=text,
                 parse_mode=parse_mode,
+                entities=entities,
+                link_preview_options=link_preview_options,
+                reply_markup=reply_markup,
+            )
+        )
+
+    async def edit_ephemeral_rich_message_text(
+        self,
+        chat_id: int | str,
+        receiver_user_id: int,
+        ephemeral_message_id: int,
+        *,
+        html: "Optional[str | RichMessage]" = None,
+        markdown: Optional[str] = None,
+        blocks: "Optional[list[InputRichBlock]]" = None,
+        media: "Optional[list[InputRichMessageMedia]]" = None,
+        reply_markup: Optional[ReplyMarkup] = None,
+    ) -> bool:
+        """Replace an ephemeral message's text with rich content. Returns True.
+
+        Takes the same html / markdown / blocks forms as send_rich_message:
+        pass exactly one of them.
+        """
+        return bool(
+            await self._call(
+                "editEphemeralMessageText",
+                chat_id=chat_id,
+                receiver_user_id=receiver_user_id,
+                ephemeral_message_id=ephemeral_message_id,
+                rich_message=self._rich_message(html, markdown, blocks, media),
                 reply_markup=reply_markup,
             )
         )
@@ -1486,7 +1591,8 @@ class Bot:
     ) -> bool:
         """Replace the media of an ephemeral message. Returns True on success.
 
-        A new file cannot be uploaded; reference one by file_id or URL.
+        Put an InputFile in the media object to upload a new file, or reference
+        one by file_id or URL.
         """
         return bool(
             await self._call(
@@ -1507,6 +1613,8 @@ class Bot:
         *,
         caption: Optional[str] = None,
         parse_mode: Optional[str] = None,
+        caption_entities: Optional[list[MessageEntity]] = None,
+        show_caption_above_media: Optional[bool] = None,
         reply_markup: Optional[ReplyMarkup] = None,
     ) -> bool:
         """Edit the caption of an ephemeral message. Returns True on success."""
@@ -1518,6 +1626,8 @@ class Bot:
                 ephemeral_message_id=ephemeral_message_id,
                 caption=caption,
                 parse_mode=parse_mode,
+                caption_entities=caption_entities,
+                show_caption_above_media=show_caption_above_media,
                 reply_markup=reply_markup,
             )
         )
@@ -1718,6 +1828,7 @@ class Bot:
         can_delete_stories: Optional[bool] = None,
         can_manage_direct_messages: Optional[bool] = None,
         can_manage_tags: Optional[bool] = None,
+        can_send_welcome_messages: Optional[bool] = None,
     ) -> bool:
         """Promote or demote a member by toggling administrator rights.
 
@@ -1746,6 +1857,7 @@ class Bot:
                 can_delete_stories=can_delete_stories,
                 can_manage_direct_messages=can_manage_direct_messages,
                 can_manage_tags=can_manage_tags,
+                can_send_welcome_messages=can_send_welcome_messages,
             )
         )
 

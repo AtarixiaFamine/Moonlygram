@@ -3,7 +3,9 @@
 Session owns the httpx client, builds the ``/bot<token>/<method>`` URL, and
 unwraps the Bot API ``{ok, result, description}`` envelope into a result value
 or a typed exception. Requests carrying an InputFile are sent as multipart
-form-data; all others are sent as JSON.
+form-data; all others are sent as JSON. A file nested inside a media object is
+hoisted into its own part and referenced by an ``attach://`` name, which is how
+the Bot API takes an upload that is not a top-level parameter.
 """
 from __future__ import annotations
 
@@ -38,20 +40,25 @@ class Session:
     async def call(self, method: str, /, **params: Any) -> Any:
         """Call a Bot API method and return its ``result``, or raise.
 
-        Parameters set to None are dropped. An InputFile value triggers a
-        multipart upload; other values with a to_dict() method (such as keyboard
-        markups) are serialized through it.
+        Parameters set to None are dropped. An InputFile triggers a multipart
+        upload, whether it is the parameter itself or nested inside a media
+        object; other values with a to_dict() method (such as keyboard markups)
+        are serialized through it.
         """
         params = {k: v for k, v in params.items() if v is not None}
         files = {k: v for k, v in params.items() if isinstance(v, InputFile)}
+        payload = {
+            k: _attach(_serialize(v), files)
+            for k, v in params.items()
+            if k not in files
+        }
         url = f"{self._base}/{method}"
 
         if files:
-            data = {k: _to_form(v) for k, v in params.items() if k not in files}
+            data = {k: _to_form(v) for k, v in payload.items()}
             uploads = {k: (f.filename, f.content) for k, f in files.items()}
             resp = await self._request(self._http.post(url, data=data, files=uploads))
         else:
-            payload = {k: _serialize(v) for k, v in params.items()}
             resp = await self._request(self._http.post(url, json=payload))
 
         return self._result(resp, method)
@@ -100,7 +107,25 @@ def _serialize(value: Any) -> Any:
     return value
 
 
+def _attach(value: Any, files: dict[str, InputFile]) -> Any:
+    """Swap nested InputFiles for attach:// names, collecting them into files.
+
+    A file the Bot API takes inside an object (a media group item, an edited
+    message's media, a sticker) travels as its own multipart part; the object
+    names that part instead of carrying the bytes. Walks lists and dicts, so one
+    call covers a list of media items.
+    """
+    if isinstance(value, InputFile):
+        name = f"attached{len(files)}"
+        files[name] = value
+        return f"attach://{name}"
+    if isinstance(value, list):
+        return [_attach(v, files) for v in value]
+    if isinstance(value, dict):
+        return {k: _attach(v, files) for k, v in value.items()}
+    return value
+
+
 def _to_form(value: Any) -> str:
-    """Render a non-file value as a multipart form field (JSON unless a string)."""
-    value = _serialize(value)
+    """Render an already-serialized value as a multipart form field."""
     return value if isinstance(value, str) else json.dumps(value)

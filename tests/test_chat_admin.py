@@ -266,3 +266,18 @@ class TestChatAndMemberManagement:
 
         assert seen == [5]
         assert session.calls == [("approveChatJoinRequest", {"chat_id": 100, "user_id": 5})]
+
+
+def test_administrator_rights_carry_the_welcome_message_right():
+    rights = ChatAdministratorRights(can_send_welcome_messages=True)
+    assert rights.to_dict() == {"can_send_welcome_messages": True}
+    parsed = ChatAdministratorRights.from_dict({"can_send_welcome_messages": False})
+    assert parsed.can_send_welcome_messages is False
+
+
+async def test_promote_chat_member_sends_the_welcome_message_right():
+    bot, session = fake_bot(True)
+    await bot.promote_chat_member(1, 42, can_send_welcome_messages=True)
+    method, params = session.calls[0]
+    assert method == "promoteChatMember"
+    assert params["can_send_welcome_messages"] is True

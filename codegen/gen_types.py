@@ -130,7 +130,9 @@ def merge_union_fields(
     each — so the discriminator (type / status / source) stays required and the
     variant-specific fields become optional.
     """
-    subtypes = entry["subtypes"]
+    # RichText lists "String" and "Array of RichText" among its subtypes; only
+    # the object variants carry fields, and a parse helper handles the rest.
+    subtypes = [s for s in entry["subtypes"] if s in spec["types"]]
     occurrences: dict[str, list[dict[str, Any]]] = {}
     order: list[str] = []
     for sub_name in subtypes:

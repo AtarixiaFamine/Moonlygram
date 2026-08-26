@@ -13,6 +13,7 @@ from .callbackdata import CallbackDataCache
 from .context import CallbackContext, ContextTypes
 from .handlers import (
     BaseHandler,
+    BotSubscriptionHandler,
     CallbackQueryHandler,
     ChatBoostHandler,
     ChatJoinRequestHandler,
@@ -21,6 +22,7 @@ from .handlers import (
     CommandHandler,
     ConversationHandler,
     InlineQueryHandler,
+    MessageGenerationStoppedHandler,
     MessageHandler,
     MessageReactionHandler,
     PollAnswerHandler,
@@ -49,6 +51,8 @@ __all__ = [
     "PollHandler",
     "PollAnswerHandler",
     "MessageReactionHandler",
+    "MessageGenerationStoppedHandler",
+    "BotSubscriptionHandler",
     "ChatBoostHandler",
     "ShippingQueryHandler",
     "PreCheckoutQueryHandler",

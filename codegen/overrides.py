@@ -25,6 +25,7 @@ GENERATE: set[str] = {
     "File",
     "Sticker",
     "StickerSet",
+    "LivePhoto",
     # content objects
     "Location",
     "Contact",
@@ -64,6 +65,25 @@ GENERATE: set[str] = {
     "StarTransaction",
     "StarAmount",
     "AffiliateInfo",
+    # communities
+    "Community",
+    "CommunityChatAdded",
+    "CommunityChatJoined",
+    "CommunityChatRemoved",
+    # unique gifts (the received side; the gift methods stay unimplemented)
+    "UniqueGiftInfo",
+    "UniqueGift",
+    "UniqueGiftModel",
+    "UniqueGiftSymbol",
+    "UniqueGiftBackdrop",
+    "UniqueGiftBackdropColors",
+    "UniqueGiftColors",
+    # received rich messages (the send side is hand-written in rich/blocks.py)
+    "RichMessage",
+    "RichBlockListItem",
+    # subscriptions and generation updates
+    "BotSubscriptionUpdated",
+    "MessageGenerationStopped",
 }
 
 # Abstract spec types modelled as a single FLAT dataclass: the union of every
@@ -72,6 +92,8 @@ GENERATE: set[str] = {
 # optional. Variant-specific extras still land in `raw`. Mirrors the original
 # hand-written MessageOrigin / ChatMember / ChatBoostSource.
 FLAT_UNIONS: set[str] = {
+    "RichText",
+    "RichBlock",
     "MessageOrigin",
     "ChatMember",
     "ChatBoostSource",
@@ -102,6 +124,20 @@ HANDWRITTEN_PARSEABLE: set[str] = {
     "ChatPermissions",
     "ChatAdministratorRights",
     "MaskPosition",
+    # shared by both directions: the spec has no Input* counterpart for these
+    "RichBlockCaption",
+    "RichBlockTableCell",
+    "RichMessageButton",
+}
+
+# Generated types that types.py re-exports under a different name, because the
+# spec name is already taken by the send-side API. The generator still emits the
+# spec name; only the alias is public.
+RENAMED_IN_TYPES: dict[str, str] = {
+    # RichMessage is the send-side builder, the library's headline API.
+    "RichMessage": "RichMessageContent",
+    # RichText is the loose alias a caller passes when sending.
+    "RichText": "RichTextNode",
 }
 
 # Per-(type, field) annotation overrides, e.g. polymorphic file inputs or union
@@ -111,6 +147,14 @@ FIELD_TYPE_OVERRIDES: dict[tuple[str, str], str] = {
     ("ReactionCount", "type"): '"ReactionType"',
     ("MessageReactionUpdated", "old_reaction"): '"list[ReactionType]"',
     ("MessageReactionUpdated", "new_reaction"): '"list[ReactionType]"',
+    # RichText is a string, a list, or a node object, so the alias covers all
+    # three rather than naming the dataclass.
+    ("RichText", "text"): '"RichTextValue"',
+    ("RichBlock", "text"): '"RichTextValue"',
+    ("RichBlock", "credit"): '"RichTextValue"',
+    ("RichBlock", "summary"): '"RichTextValue"',
+    # A media block captions with RichBlockCaption, a table with RichText.
+    ("RichBlock", "caption"): '"RichBlockCaption | RichTextValue"',
 }
 
 # Per-(type, field) PARSE-EXPRESSION overrides for from_dict. `{d}` is the
@@ -120,6 +164,11 @@ FIELD_PARSE_OVERRIDES: dict[tuple[str, str], str] = {
     ("ReactionCount", "type"): '_reaction_type({d}.get("{k}", {{}}))',
     ("MessageReactionUpdated", "old_reaction"): '_reactions({d}.get("{k}"))',
     ("MessageReactionUpdated", "new_reaction"): '_reactions({d}.get("{k}"))',
+    ("RichText", "text"): '_rich_text({d}.get("{k}"))',
+    ("RichBlock", "text"): '_rich_text({d}.get("{k}"))',
+    ("RichBlock", "credit"): '_rich_text({d}.get("{k}"))',
+    ("RichBlock", "summary"): '_rich_text({d}.get("{k}"))',
+    ("RichBlock", "caption"): '_rich_caption({d}.get("{k}"))',
 }
 
 # Names imported into the generated module from .types (helpers/behavior types
@@ -130,4 +179,7 @@ EXTRA_IMPORTS_FROM_TYPES: set[str] = {
     "ReactionType",
     "_reaction_type",
     "_reactions",
+    "RichTextValue",
+    "_rich_text",
+    "_rich_caption",
 }

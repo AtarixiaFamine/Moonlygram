@@ -294,3 +294,174 @@ async def test_send_rich_message_blocks_conflicts_with_other_forms():
         await bot.send_rich_message(
             1, html="<p>x</p>", blocks=[InputRichBlockParagraph("y")]
         )
+
+
+def test_buttons_block_serializes_a_row():
+    from moonlygram import DisabledButton
+    from moonlygram.rich import InputRichBlockButtons, RichMessageButton
+
+    block = InputRichBlockButtons(
+        [
+            RichMessageButton("Open", url="https://example.com", style="link"),
+            RichMessageButton("Soon", disabled=DisabledButton()),
+        ],
+        align="center",
+    )
+    assert block.to_dict() == {
+        "type": "buttons",
+        "buttons": [
+            {"text": "Open", "style": "link", "url": "https://example.com"},
+            {"text": "Soon", "disabled": {}},
+        ],
+        "align": "center",
+    }
+
+
+def test_document_block_carries_its_media():
+    from moonlygram import InputMediaDocument
+    from moonlygram.rich import InputRichBlockDocument, RichBlockCaption
+
+    block = InputRichBlockDocument(
+        InputMediaDocument("file9"), caption=RichBlockCaption("report")
+    )
+    assert block.to_dict() == {
+        "type": "document",
+        "document": {"type": "document", "media": "file9"},
+        "caption": {"text": "report"},
+    }
+
+
+def test_expandable_block_quotation_uses_its_own_discriminator():
+    from moonlygram.rich import (
+        InputRichBlockBlockQuotation,
+        InputRichBlockExpandableBlockQuotation,
+        InputRichBlockParagraph,
+    )
+
+    plain = InputRichBlockBlockQuotation([InputRichBlockParagraph("q")])
+    expandable = InputRichBlockExpandableBlockQuotation("q", credit="me")
+    assert plain.to_dict()["type"] == "blockquote"
+    assert expandable.to_dict() == {
+        "type": "expandable_blockquote",
+        "text": "q",
+        "credit": "me",
+    }
+
+
+def test_table_is_compact_is_omitted_when_unset():
+    from moonlygram.rich import InputRichBlockTable, RichBlockTableCell
+
+    cells = [[RichBlockTableCell("a")]]
+    assert "is_compact" not in InputRichBlockTable(cells).to_dict()
+    assert InputRichBlockTable(cells, is_compact=True).to_dict()["is_compact"] is True
+
+
+async def test_buttons_block_reaches_the_wire_through_send_rich_message():
+    from moonlygram.rich import InputRichBlockButtons, RichMessageButton
+
+    bot, session = fake_bot(_MESSAGE_DICT)
+    await bot.send_rich_message(
+        1, blocks=[InputRichBlockButtons([RichMessageButton("Go", callback_data="go")])]
+    )
+    _, params = session.calls[0]
+    assert params["rich_message"]["blocks"] == [
+        {"type": "buttons", "buttons": [{"text": "Go", "callback_data": "go"}]}
+    ]
+
+
+def test_rich_message_media_carries_a_document():
+    """10.3 added tg://document?id= links, so documents are referenceable media."""
+    from moonlygram import InputMediaDocument
+    from moonlygram.rich import InputRichMessageMedia
+
+    media = InputRichMessageMedia("doc1", InputMediaDocument("file9"))
+    assert media.to_dict() == {
+        "id": "doc1",
+        "media": {"type": "document", "media": "file9"},
+    }
+
+
+_RECEIVED = {
+    "is_rtl": False,
+    "blocks": [
+        {"type": "paragraph", "text": [{"type": "bold", "text": "Hi"}, " there"]},
+        {
+            "type": "table",
+            "cells": [[{"text": "a", "is_header": True}]],
+            "is_compact": True,
+            "caption": "a plain caption",
+        },
+        {
+            "type": "photo",
+            "photo": [{"file_id": "f", "file_unique_id": "u", "width": 1, "height": 1}],
+            "caption": {"text": "shot", "credit": "me"},
+        },
+        {
+            "type": "buttons",
+            "buttons": [{"text": "Go", "url": "https://x", "disabled": {}}],
+            "align": "center",
+        },
+        {"type": "expandable_blockquote", "text": "long", "credit": "me"},
+    ],
+}
+
+
+def _received_blocks():
+    from moonlygram import Message
+
+    msg = Message.from_dict(
+        {"message_id": 1, "chat": {"id": 1, "type": "private"}, "rich_message": _RECEIVED}
+    )
+    assert msg.rich_message is not None
+    return msg.rich_message
+
+
+def test_received_rich_message_parses_its_blocks():
+    rich = _received_blocks()
+    assert rich.is_rtl is False
+    assert [b.type for b in rich.blocks] == [
+        "paragraph",
+        "table",
+        "photo",
+        "buttons",
+        "expandable_blockquote",
+    ]
+
+
+def test_received_rich_text_mixes_nodes_and_plain_strings():
+    from moonlygram import RichTextNode
+
+    paragraph = _received_blocks().blocks[0]
+    node, plain = paragraph.text
+    assert isinstance(node, RichTextNode)
+    assert (node.type, node.text) == ("bold", "Hi")
+    assert plain == " there"  # a bare string stays a string
+
+
+def test_caption_parses_by_shape_not_by_field_name():
+    """A table captions with RichText, a media block with RichBlockCaption."""
+    from moonlygram.rich import RichBlockCaption
+
+    table, photo = _received_blocks().blocks[1], _received_blocks().blocks[2]
+    assert table.caption == "a plain caption"
+    assert isinstance(photo.caption, RichBlockCaption)
+    assert (photo.caption.text, photo.caption.credit) == ("shot", "me")
+    assert table.is_compact is True
+    assert table.cells[0][0].is_header is True
+
+
+def test_received_buttons_carry_the_disabled_marker():
+    from moonlygram import DisabledButton
+
+    buttons = _received_blocks().blocks[3]
+    assert buttons.align == "center"
+    button = buttons.buttons[0]
+    assert (button.text, button.url) == ("Go", "https://x")
+    assert button.disabled == DisabledButton()
+
+
+def test_rich_message_button_round_trips():
+    from moonlygram.rich import RichMessageButton
+
+    sent = RichMessageButton("Go", callback_data="g", style="primary")
+    assert RichMessageButton.from_dict(sent.to_dict()) == sent

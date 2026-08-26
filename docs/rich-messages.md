@@ -62,9 +62,36 @@ await bot.send_rich_message(
 ```
 
 Pass exactly one of `html`, `markdown`, or `blocks`. When `html` or `markdown`
-text references a file through a `tg://photo?id=`, `tg://video?id=`, or
-`tg://audio?id=` link, supply those files with `media`, a list of
-`InputRichMessageMedia`.
+text references a file through a `tg://photo?id=`, `tg://video?id=`,
+`tg://audio?id=`, or `tg://document?id=` link, supply those files with `media`,
+a list of `InputRichMessageMedia`. Each entry takes an `InputFile` to upload a
+new file, or a `file_id` / URL string.
+
+### Buttons
+
+`InputRichBlockButtons` puts a row of 1-8 buttons in the message body. Each
+`RichMessageButton` sets exactly one action, and `style` is `"primary"`,
+`"success"`, `"danger"`, or `"link"`. A button carrying `DisabledButton()` is
+shown but does nothing.
+
+```python
+from moonlygram import DisabledButton
+from moonlygram.rich import InputRichBlockButtons, RichMessageButton
+
+InputRichBlockButtons(
+    [
+        RichMessageButton("Read more", url="https://example.com", style="link"),
+        RichMessageButton("Subscribe", callback_data="sub", style="primary"),
+        RichMessageButton("Sold out", disabled=DisabledButton()),
+    ],
+    align="center",
+)
+```
+
+The same `disabled` field works on ordinary keyboards through
+`InlineKeyboardButton`, and both `InlineKeyboardMarkup` and
+`ReplyKeyboardMarkup` accept `force_reply` to show the reply interface
+alongside the keyboard.
 
 ## Streaming
 
@@ -72,6 +99,58 @@ text references a file through a `tg://photo?id=`, `tg://video?id=`, or
 TTL); send the final version with `send_rich_message`. In a blocks draft,
 `InputRichBlockThinking` renders a "thinking" placeholder for content that has
 not arrived yet; it is valid only in drafts.
+
+Pass `can_stop=True` to give the reader a control that stops the generation.
+Pressing it produces a `stopped_message_generation` update, which
+`MessageGenerationStoppedHandler` receives; the update names the draft with
+`draft_id`. `keep_on_stop=True` leaves the text written so far in place.
+
+```python
+from moonlygram.ext import MessageGenerationStoppedHandler
+
+async def stopped(update, context):
+    drafts.cancel(update.stopped_message_generation.draft_id)
+
+app.add_handler(MessageGenerationStoppedHandler(stopped))
+```
+
+## Receiving
+
+An incoming rich message arrives on `Message.rich_message` as a
+`RichMessageContent`: `is_rtl`, plus `blocks`, a list of `RichBlock`. Each block
+names its variant in `type` and carries that variant's fields.
+
+```python
+async def on_rich(update, context):
+    rich = update.effective_message.rich_message
+    if rich is None:
+        return
+    for block in rich.blocks:
+        if block.type == "section_heading":
+            print(block.size, block.text)
+        elif block.type == "table":
+            print(len(block.cells), "rows", "compact" if block.is_compact else "")
+```
+
+Rich text is whatever the payload holds: a plain `str`, a list mixing strings
+and nodes, or a single `RichTextNode` naming its own `type` ("bold", "code",
+"custom_emoji", and so on). The `RichTextValue` alias covers all three.
+
+```python
+from moonlygram import RichTextNode
+
+def plain(value) -> str:
+    """Flatten received rich text down to its characters."""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        return "".join(plain(v) for v in value)
+    return plain(value.text) if isinstance(value, RichTextNode) else ""
+```
+
+The spec calls these two types `RichMessage` and `RichText`. Both names are
+already taken here by the send side — the builder and the loose input alias —
+so the received classes are `RichMessageContent` and `RichTextNode`.
 
 ## Editing
 
