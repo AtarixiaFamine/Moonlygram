@@ -65,6 +65,13 @@ a file can finally be uploaded from inside a media object.
 - The hand-written rich blocks are now checked against the vendored spec, the
   same way the generated types are. The spec did not model them before 10.3.
 
+### Fixed
+- CI linted against ruff's default rule set, which widens between releases:
+  ruff 0.16 folded pyupgrade, isort and more into its defaults, failing the
+  build on unchanged code (the released 0.4.0 reports 1344 errors under it).
+  The rule set is now pinned in `pyproject.toml`, so upgrading the linter no
+  longer changes what the project enforces.
+
 ### Removed
 - The `receiver_user_id` and `callback_query_id` parameters, replaced by
   `ephemeral_message_parameters` (see below).
