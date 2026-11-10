@@ -1,6 +1,6 @@
 """Generated Bot API data types — do not edit by hand.
 
-Produced by codegen/gen_types.py from Bot API 10.3.
+Produced by codegen/gen_types.py from Bot API 10.4.
 Edit codegen/overrides.py and re-run the generator instead.
 """
 from __future__ import annotations
@@ -102,6 +102,44 @@ class Animation:
             "file_name": self.file_name,
             "mime_type": self.mime_type,
             "file_size": self.file_size,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class AreaPosition:
+    """Describes the position of a rectangle area on a story media or a TON wallet
+    card.
+    """
+
+    x_percentage: float
+    y_percentage: float
+    width_percentage: float
+    height_percentage: float
+    rotation_angle: float
+    corner_radius_percentage: float
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "AreaPosition":
+        return cls(
+            x_percentage=d.get("x_percentage"),
+            y_percentage=d.get("y_percentage"),
+            width_percentage=d.get("width_percentage"),
+            height_percentage=d.get("height_percentage"),
+            rotation_angle=d.get("rotation_angle"),
+            corner_radius_percentage=d.get("corner_radius_percentage"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "x_percentage": self.x_percentage,
+            "y_percentage": self.y_percentage,
+            "width_percentage": self.width_percentage,
+            "height_percentage": self.height_percentage,
+            "rotation_angle": self.rotation_angle,
+            "corner_radius_percentage": self.corner_radius_percentage,
         }
         return {k: v for k, v in d.items() if v is not None}
 
@@ -591,6 +629,91 @@ class ChatMemberUpdated:
 
 
 @dataclass(slots=True)
+class ChatShareTheme:
+    """This object describes the theme of the screen for sharing a link to a user or a
+    chat. Currently, it can be one of - ChatShareThemeEmoji -
+    ChatShareThemeUniqueGift
+    """
+
+    type: str
+    emojis: Optional[list[EmojiType]] = None
+    background_backdrop_id: Optional[int] = None
+    gift: Optional[UniqueGift] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "ChatShareTheme":
+        return cls(
+            type=d.get("type"),
+            emojis=[EmojiType.from_dict(i) for i in d["emojis"]] if "emojis" in d else None,
+            background_backdrop_id=d.get("background_backdrop_id"),
+            gift=UniqueGift.from_dict(d["gift"]) if "gift" in d else None,
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "type": self.type,
+            "emojis": self.emojis,
+            "background_backdrop_id": self.background_backdrop_id,
+            "gift": self.gift,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class ChatShareThemeBackdrop:
+    """This object describes a backdrop, which can be used as the background of a
+    theme of the screen for sharing a link to a user or a chat.
+    """
+
+    id: int
+    name: str
+    colors: UniqueGiftBackdropColors
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "ChatShareThemeBackdrop":
+        return cls(
+            id=d.get("id"),
+            name=d.get("name"),
+            colors=UniqueGiftBackdropColors.from_dict(d["colors"]) if "colors" in d else None,
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "id": self.id,
+            "name": self.name,
+            "colors": self.colors,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class ChatShareThemeBackdrops:
+    """This object contains a list of backdrops, which can be used as the background
+    of a theme of the screen for sharing a link to a user or a chat.
+    """
+
+    backdrops: list[ChatShareThemeBackdrop]
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "ChatShareThemeBackdrops":
+        return cls(
+            backdrops=[ChatShareThemeBackdrop.from_dict(i) for i in d["backdrops"]] if "backdrops" in d else None,
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "backdrops": self.backdrops,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
 class Community:
     """Represents a community (a group of chats)."""
 
@@ -769,6 +892,35 @@ class Document:
             "file_name": self.file_name,
             "mime_type": self.mime_type,
             "file_size": self.file_size,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class EmojiType:
+    """This object describes an emoji. Currently, it can be one of - EmojiTypeEmoji -
+    EmojiTypeCustomEmoji
+    """
+
+    type: str
+    emoji: Optional[str] = None
+    custom_emoji_id: Optional[str] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "EmojiType":
+        return cls(
+            type=d.get("type"),
+            emoji=d.get("emoji"),
+            custom_emoji_id=d.get("custom_emoji_id"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "type": self.type,
+            "emoji": self.emoji,
+            "custom_emoji_id": self.custom_emoji_id,
         }
         return {k: v for k, v in d.items() if v is not None}
 
@@ -1186,6 +1338,27 @@ class OrderInfo:
             "phone_number": self.phone_number,
             "email": self.email,
             "shipping_address": self.shipping_address,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class PaidMessagesWaived:
+    """Describes a service message about the sender of the message using a link of the
+    other user, which allows sending messages to the user without paying Telegram
+    Stars. Currently holds no information.
+    """
+
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "PaidMessagesWaived":
+        return cls(
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
         }
         return {k: v for k, v in d.items() if v is not None}
 
@@ -1650,9 +1823,10 @@ class RichText:
     RichTextSpoiler - RichTextDateTime - RichTextTextMention - RichTextSubscript -
     RichTextSuperscript - RichTextMarked - RichTextCode - RichTextCustomEmoji -
     RichTextMathematicalExpression - RichTextUrl - RichTextEmailAddress -
-    RichTextPhoneNumber - RichTextBankCardNumber - RichTextMention -
-    RichTextHashtag - RichTextCashtag - RichTextBotCommand - RichTextButton -
-    RichTextAnchor - RichTextAnchorLink - RichTextReference - RichTextReferenceLink
+    RichTextPhoneNumber - RichTextBankCardNumber - RichTextTonAddress -
+    RichTextMention - RichTextHashtag - RichTextCashtag - RichTextBotCommand -
+    RichTextButton - RichTextAnchor - RichTextAnchorLink - RichTextReference -
+    RichTextReferenceLink
     """
 
     type: str
@@ -1667,6 +1841,7 @@ class RichText:
     email_address: Optional[str] = None
     phone_number: Optional[str] = None
     bank_card_number: Optional[str] = None
+    address: Optional[str] = None
     username: Optional[str] = None
     hashtag: Optional[str] = None
     cashtag: Optional[str] = None
@@ -1692,6 +1867,7 @@ class RichText:
             email_address=d.get("email_address"),
             phone_number=d.get("phone_number"),
             bank_card_number=d.get("bank_card_number"),
+            address=d.get("address"),
             username=d.get("username"),
             hashtag=d.get("hashtag"),
             cashtag=d.get("cashtag"),
@@ -1717,6 +1893,7 @@ class RichText:
             "email_address": self.email_address,
             "phone_number": self.phone_number,
             "bank_card_number": self.bank_card_number,
+            "address": self.address,
             "username": self.username,
             "hashtag": self.hashtag,
             "cashtag": self.cashtag,
@@ -2015,6 +2192,155 @@ class SuccessfulPayment:
             "is_first_recurring": self.is_first_recurring,
             "shipping_option_id": self.shipping_option_id,
             "order_info": self.order_info,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class TonNft:
+    """This object represents an NFT in the TON blockchain."""
+
+    address: str
+    index: str
+    name: str
+    description: str
+    collection_address: Optional[str] = None
+    attributes: Optional[list[TonNftAttribute]] = None
+    gift: Optional[UniqueGift] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "TonNft":
+        return cls(
+            address=d.get("address"),
+            index=d.get("index"),
+            name=d.get("name"),
+            description=d.get("description"),
+            collection_address=d.get("collection_address"),
+            attributes=[TonNftAttribute.from_dict(i) for i in d["attributes"]] if "attributes" in d else None,
+            gift=UniqueGift.from_dict(d["gift"]) if "gift" in d else None,
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "address": self.address,
+            "index": self.index,
+            "name": self.name,
+            "description": self.description,
+            "collection_address": self.collection_address,
+            "attributes": self.attributes,
+            "gift": self.gift,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class TonNftAttribute:
+    """This object represents an attribute of an NFT in the TON blockchain."""
+
+    trait_type: str
+    value: str
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "TonNftAttribute":
+        return cls(
+            trait_type=d.get("trait_type"),
+            value=d.get("value"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "trait_type": self.trait_type,
+            "value": self.value,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class TonWalletCard:
+    """This object describes a TON wallet card, which is shown on the profile page of
+    a user to everyone.
+    """
+
+    address: str
+    amount: str
+    stickers: list[TonWalletCardSticker]
+    background_nft_address: Optional[str] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "TonWalletCard":
+        return cls(
+            address=d.get("address"),
+            amount=d.get("amount"),
+            stickers=[TonWalletCardSticker.from_dict(i) for i in d["stickers"]] if "stickers" in d else None,
+            background_nft_address=d.get("background_nft_address"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "address": self.address,
+            "amount": self.amount,
+            "stickers": self.stickers,
+            "background_nft_address": self.background_nft_address,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class TonWalletCardSticker:
+    """This object describes a sticker on a TON wallet card."""
+
+    position: AreaPosition
+    nft: TonNft
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "TonWalletCardSticker":
+        return cls(
+            position=AreaPosition.from_dict(d["position"]) if "position" in d else None,
+            nft=TonNft.from_dict(d["nft"]) if "nft" in d else None,
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "position": self.position,
+            "nft": self.nft,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class TonWalletTransfer:
+    """Describes a service message about a transfer with a TON wallet."""
+
+    transaction_id: str
+    peer_address: str
+    amount: str
+    comment: Optional[str] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "TonWalletTransfer":
+        return cls(
+            transaction_id=d.get("transaction_id"),
+            peer_address=d.get("peer_address"),
+            amount=d.get("amount"),
+            comment=d.get("comment"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "transaction_id": self.transaction_id,
+            "peer_address": self.peer_address,
+            "amount": self.amount,
+            "comment": self.comment,
         }
         return {k: v for k, v in d.items() if v is not None}
 
@@ -2544,5 +2870,109 @@ class Voice:
             "duration": self.duration,
             "mime_type": self.mime_type,
             "file_size": self.file_size,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class Widget:
+    """This object describes an HTML widget."""
+
+    html: str
+    id: Optional[str] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    public_data: Optional[str] = None
+    chat_data: Optional[str] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "Widget":
+        return cls(
+            html=d.get("html"),
+            id=d.get("id"),
+            width=d.get("width"),
+            height=d.get("height"),
+            public_data=d.get("public_data"),
+            chat_data=d.get("chat_data"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "html": self.html,
+            "id": self.id,
+            "width": self.width,
+            "height": self.height,
+            "public_data": self.public_data,
+            "chat_data": self.chat_data,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class WidgetQueryType:
+    """This object describes the type of a query from a widget. Currently, it can be
+    one of - WidgetQueryTypeData - WidgetQueryTypeSignData -
+    WidgetQueryTypeSentTransaction
+    """
+
+    type: str
+    wallet_card: Optional[TonWalletCard] = None
+    wallet: Optional[WidgetQueryWallet] = None
+    sign_data: Optional[str] = None
+    msg_hash: Optional[str] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "WidgetQueryType":
+        return cls(
+            type=d.get("type"),
+            wallet_card=TonWalletCard.from_dict(d["wallet_card"]) if "wallet_card" in d else None,
+            wallet=WidgetQueryWallet.from_dict(d["wallet"]) if "wallet" in d else None,
+            sign_data=d.get("sign_data"),
+            msg_hash=d.get("msg_hash"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "type": self.type,
+            "wallet_card": self.wallet_card,
+            "wallet": self.wallet,
+            "sign_data": self.sign_data,
+            "msg_hash": self.msg_hash,
+        }
+        return {k: v for k, v in d.items() if v is not None}
+
+
+@dataclass(slots=True)
+class WidgetQueryWallet:
+    """This object describes a TON wallet of the user, which is used in a query from a
+    widget.
+    """
+
+    address: str
+    amount: str
+    public_key: Optional[str] = None
+    state_init: Optional[str] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "WidgetQueryWallet":
+        return cls(
+            address=d.get("address"),
+            amount=d.get("amount"),
+            public_key=d.get("public_key"),
+            state_init=d.get("state_init"),
+            raw=d,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
+            "address": self.address,
+            "amount": self.amount,
+            "public_key": self.public_key,
+            "state_init": self.state_init,
         }
         return {k: v for k, v in d.items() if v is not None}

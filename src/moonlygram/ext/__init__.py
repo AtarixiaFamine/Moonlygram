@@ -29,8 +29,10 @@ from .handlers import (
     PollHandler,
     PreCheckoutQueryHandler,
     PrefixHandler,
+    SharedWidgetQueryHandler,
     ShippingQueryHandler,
     TypeHandler,
+    WidgetQueryHandler,
 )
 from .jobqueue import Job, JobQueue
 from .persistence import BasePersistence, DictPersistence, PicklePersistence
@@ -56,6 +58,8 @@ __all__ = [
     "ChatBoostHandler",
     "ShippingQueryHandler",
     "PreCheckoutQueryHandler",
+    "WidgetQueryHandler",
+    "SharedWidgetQueryHandler",
     "ConversationHandler",
     "PrefixHandler",
     "TypeHandler",

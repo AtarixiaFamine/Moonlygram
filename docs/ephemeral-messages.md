@@ -3,6 +3,8 @@
 Bot API 10.2 adds ephemeral messages: a message a bot sends into a group that
 only one specific user and the bot can see. Bot API 10.3 reshaped how the
 recipient is named, gathering the arguments into `EphemeralMessageParameters`.
+Bot API 10.4 made the recipient optional, because a callback query already
+says who pressed the button.
 
 ## Sending
 
@@ -36,6 +38,34 @@ await bot.send_message(
     ),
 )
 ```
+
+### Replying to a button anywhere
+
+Since Bot API 10.4 a `callback_query_id` on its own is enough: the message goes
+to whoever pressed the button, and `chat_id` becomes optional on every send
+method that takes ephemeral parameters. Pass `None` for it.
+
+```python
+await bot.send_message(
+    None,
+    "Only you can see this.",
+    ephemeral_message_parameters=EphemeralMessageParameters(
+        callback_query_id=query.id
+    ),
+)
+```
+
+This works in every chat except a channel's direct-messages chat, which is what
+makes it useful: a bot that holds no user id for the chat it is in can still
+answer a button press privately. The same applies to `send_rich_message`,
+`send_photo`, `send_document`, `send_video`, `send_animation`, `send_audio`,
+`send_voice`, `send_video_note`, `send_sticker`, `send_contact`,
+`send_location`, and `send_venue`.
+
+`EphemeralMessageParameters` with neither a `receiver_user_id` nor a
+`callback_query_id` raises `ValueError`. Naming nobody is not a neutral
+default: Telegram would read the message as an ordinary one and show it to the
+whole chat, which is the mistake the type exists to prevent.
 
 ### Upgrading from 0.4
 

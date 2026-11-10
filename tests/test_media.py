@@ -249,3 +249,134 @@ async def test_media_without_uploads_still_goes_as_json():
         assert b"attach://" not in captured["body"]
     finally:
         await bot.session.close()
+
+
+def test_input_media_video_carries_the_playback_fields():
+    """supports_streaming decides whether the reader can play before the
+    download finishes, so it has to survive to_dict."""
+    from moonlygram import InputMediaVideo
+
+    video = InputMediaVideo(
+        "file_id",
+        width=1920,
+        height=1080,
+        duration=42,
+        cover="cover_file_id",
+        start_timestamp=5,
+        supports_streaming=True,
+        has_spoiler=True,
+        show_caption_above_media=True,
+    )
+    assert video.to_dict() == {
+        "type": "video",
+        "media": "file_id",
+        "width": 1920,
+        "height": 1080,
+        "duration": 42,
+        "cover": "cover_file_id",
+        "start_timestamp": 5,
+        "supports_streaming": True,
+        "has_spoiler": True,
+        "show_caption_above_media": True,
+    }
+    # unset fields stay out of the payload
+    assert InputMediaVideo("file_id").to_dict() == {"type": "video", "media": "file_id"}
+
+
+async def test_rich_video_block_streams_and_uploads_its_thumbnail():
+    from moonlygram import InputMediaVideo
+    from moonlygram.rich import InputRichBlockVideo
+
+    captured: dict[str, Any] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["body"] = request.content
+        return httpx.Response(200, json={"ok": True, "result": _MESSAGE_DICT})
+
+    bot = mock_bot(handler)
+    try:
+        await bot.send_rich_message(
+            123,
+            blocks=[
+                InputRichBlockVideo(
+                    InputMediaVideo(
+                        InputFile(b"VID", filename="clip.mp4"),
+                        thumbnail=InputFile(b"JPG", filename="thumb.jpg"),
+                        supports_streaming=True,
+                    )
+                )
+            ],
+        )
+        body = captured["body"]
+        assert b'"supports_streaming": true' in body
+        # the video and its thumbnail each became their own part
+        assert b"attach://attached0" in body and b"attach://attached1" in body
+        assert b"clip.mp4" in body and b"thumb.jpg" in body
+    finally:
+        await bot.session.close()
+
+
+def test_input_media_thumbnails_and_caption_entities_serialize():
+    from moonlygram import (
+        InputMediaAnimation,
+        InputMediaAudio,
+        InputMediaDocument,
+        MessageEntity,
+    )
+    from moonlygram.session import _serialize
+
+    entities = [MessageEntity(type="bold", offset=0, length=3)]
+    audio = InputMediaAudio("a", caption="hey", caption_entities=entities, thumbnail="t")
+    assert _serialize(audio) == {
+        "type": "audio",
+        "media": "a",
+        "caption": "hey",
+        "thumbnail": "t",
+        "caption_entities": [{"type": "bold", "offset": 0, "length": 3}],
+    }
+
+    doc = InputMediaDocument("d", disable_content_type_detection=True)
+    assert doc.to_dict() == {
+        "type": "document",
+        "media": "d",
+        "disable_content_type_detection": True,
+    }
+
+    anim = InputMediaAnimation("g", has_spoiler=True, show_caption_above_media=True)
+    assert anim.to_dict() == {
+        "type": "animation",
+        "media": "g",
+        "has_spoiler": True,
+        "show_caption_above_media": True,
+    }
+
+
+async def test_live_photo_uploads_both_of_its_files():
+    """A live photo carries a video and a still, so both have to upload."""
+    from moonlygram import InputMediaLivePhoto
+
+    captured: dict[str, Any] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["body"] = request.content
+        return httpx.Response(200, json={"ok": True, "result": [_MESSAGE_DICT]})
+
+    bot = mock_bot(handler)
+    try:
+        await bot.send_media_group(
+            123,
+            [
+                InputMediaLivePhoto(
+                    InputFile(b"MOV", filename="live.mp4"),
+                    InputFile(b"STILL", filename="live.jpg"),
+                    caption="a moment",
+                )
+            ],
+        )
+        body = captured["body"]
+        assert b'"type": "live_photo"' in body
+        assert b"live.mp4" in body and b"MOV" in body
+        assert b"live.jpg" in body and b"STILL" in body
+        assert b"attach://attached0" in body and b"attach://attached1" in body
+    finally:
+        await bot.session.close()

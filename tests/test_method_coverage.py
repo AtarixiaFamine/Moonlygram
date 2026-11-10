@@ -81,10 +81,12 @@ UNIMPLEMENTED = {
     "setBusinessAccountGiftSettings",
     "getBusinessAccountStarBalance",
     "getBusinessAccountGifts",
+    "deleteBusinessAccountGift",
     "transferBusinessAccountStars",
     # gifts and premium
     "sendGift",
     "getAvailableGifts",
+    "getUniqueGift",
     "getChatGifts",
     "getUserGifts",
     "transferGift",

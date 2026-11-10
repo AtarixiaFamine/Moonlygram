@@ -4,6 +4,156 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-11-10
+
+Bot API 10.4, complete on the surface the library covers. Widgets are the
+release: a block of HTML the app renders inside a message bubble, which, unlike
+a rich message, runs as HTML and can call back to the bot. They are modelled end
+to end, queries and shared widgets included.
+
+Telegram restricts them for now. Production accepts a widget in private chats
+only, a sent widget always has protected content so it cannot be forwarded, and
+inline results can describe one but inline mode does not serve them yet. The
+library models all of it anyway, because the restriction is Telegram's to lift
+and nothing about it is visible in the spec.
+
+The other change reaches existing bots: a callback query now identifies the
+recipient of an ephemeral message on its own, so a bot can answer a button press
+privately in a chat it holds no user id for.
+
+This release also carries a fix that predates 10.4. Types the caller
+constructs are hand-written, and unlike the received types they carry no `raw`
+dict. With `slots=True` there is nowhere to put a value the
+dataclass does not declare, so an unmodelled field is not merely undocumented,
+it is unreachable. `InputMediaVideo` declared six of the spec's thirteen, which
+meant no video sent as an `InputMedia` object could carry
+`supports_streaming`: Telegram served it as a plain download and the reader
+waited for the whole file before playback started. `send_video` took the flag
+as a keyword all along, so only the object path was affected, which is why it
+survived a release.
+
+The gap is closed across every sent type, not just the media ones, and the
+per-family CI checks give way to a scan that finds them.
+
+### Added
+- **Widgets.** `send_widget` takes the HTML, `width` / `height` in logical
+  pixels, and the two data fields: `public_data`, which is the same everywhere
+  the widget appears, and `chat_data`, which belongs to the one message. The
+  sent `Message.widget` reports both back. `allow_queries` lets the widget call
+  the bot; `is_shared` gives it an id.
+- **Widget queries.** A widget's call arrives as a `widget_query` update
+  (`WidgetQuery`), dispatched by `WidgetQueryHandler`, which filters on the
+  query's data with `pattern` the way `CallbackQueryHandler` does. Answer it
+  with `query.answer(data)` or `Bot.answer_widget_query` within 15 seconds; an
+  answer reaches only the widget that asked and changes nothing it stores.
+  `query.edit_widget_data(...)` changes what everyone sees, finding the message
+  whether it sits in a chat or an inline message, and
+  `Bot.edit_message_widget_data` is the unbound form.
+- `WidgetQueryType` covers the three shapes a query takes, generated as one flat
+  type the way `ChatMember` is: bot data plus the sender's TON wallet card
+  (`data`), data their wallet signed (`sign_data`), or a transaction they sent
+  (`sent_transaction`).
+- **Shared widgets.** `send_shared_widget` puts a widget created with
+  `is_shared=True` in another message, and `edit_shared_widget_data` changes the
+  public data of every copy at once, with a `cache_time` of 5-3600 seconds. A
+  query from a forwarded copy arrives as a `shared_widget_query` update
+  (`SharedWidgetQuery`, dispatched by `SharedWidgetQueryHandler`), which names
+  no chat or message: `widget_id` is all there is to go on.
+- `InputWidgetMessageContent` and `InputSharedWidgetMessageContent`, for
+  describing a widget as an inline query result.
+- **TON wallet objects:** `TonWalletCard` with its `TonWalletCardSticker`,
+  `TonNft`, and `TonNftAttribute`, plus `WidgetQueryWallet` for the wallet a
+  query carries. Amounts stay strings, in the currency's smallest units, since
+  they do not survive a float.
+- `Message.ton_wallet_transfer` (`TonWalletTransfer`, with a negative `amount`
+  for an outgoing transfer) and `Message.paid_messages_waived`
+  (`PaidMessagesWaived`, which holds no fields, so its presence is the whole
+  signal).
+- **Answering a button press privately, anywhere.** `EphemeralMessageParameters`
+  now accepts a `callback_query_id` on its own, and `chat_id` became optional on
+  the fourteen send methods that take ephemeral parameters, so passing `None`
+  sends the reply to whoever pressed the button. This works in every chat but a
+  channel's direct-messages chat, and it is what lets a bot reply privately
+  where it has no user id to name.
+- `ReplyParameters.quote_rich_texts`, for quoting a run of a rich message. A
+  string plus offsets cannot express the structure a rich run carries, so the
+  nodes go across as themselves; an incoming quote arrives the same way in
+  `TextQuote.rich_texts`. A received `RichTextNode` can go straight back.
+- `get_chat_share_theme_backdrops`, with `ChatShareTheme`, `ChatShareThemeEmoji`
+  and `ChatShareThemeUniqueGift` merged into one flat type, plus
+  `ChatShareThemeBackdrop`, `ChatShareThemeBackdrops`, and `EmojiType`.
+  `ChatFullInfo.share_theme` and `ChatFullInfo.ton_wallet_card` reach them,
+  though `ChatFullInfo` itself stays an unmodelled dict.
+- `RichTextNode` parses 10.4's `ton_address` run. Like a bank card number it is
+  detected by Telegram rather than authored, so it only had to parse on the way
+  in; the `ton_address` and `bank_card_number` entity types need no code, since
+  an entity type is a plain string here.
+- A `widget_query` or `shared_widget_query` update now fills
+  `Update.effective_user_id`, and a `widget_query` from a chat fills
+  `Update.effective_chat_id`.
+- `AreaPosition`, which 10.4 renamed from `StoryAreaPosition` now that a wallet
+  card positions stickers the same way a story does. Stories are not modelled,
+  so nothing referred to the old name.
+- `InputMediaVideo.supports_streaming`, plus `thumbnail`, `cover`,
+  `start_timestamp`, `caption_entities`, `show_caption_above_media`, and
+  `has_spoiler`.
+- `InputMediaPhoto.caption_entities`, `show_caption_above_media`, and
+  `has_spoiler`; `InputMediaAnimation.thumbnail`, `caption_entities`,
+  `show_caption_above_media`, and `has_spoiler`; `InputMediaAudio.thumbnail`
+  and `caption_entities`; `InputMediaDocument.thumbnail`, `caption_entities`,
+  and `disable_content_type_detection`; `InputMediaVoiceNote.caption_entities`.
+- `InputMediaLivePhoto`, which `sendMediaGroup` has accepted since Bot API 10.1
+  and the library did not model at all. It carries the video as `media` and the
+  still frame as `photo`; both upload.
+- `Chat.first_name`, `last_name`, `is_forum`, and `is_direct_messages`. The
+  first two are the only name a private chat has, so a private `Chat` was
+  reaching handlers anonymous.
+- `User.is_premium` and `added_to_attachment_menu`, plus the ten `get_me`
+  capability flags (`can_join_groups`, `supports_inline_queries`,
+  `can_connect_to_business`, `has_main_web_app`, and the rest).
+- `ChatPermissions.can_react_to_messages` and `can_edit_tag`, so
+  `set_chat_permissions` can no longer silently omit them.
+- `ReplyParameters.checklist_task_id` and `poll_option_id`.
+- `InputTextMessageContent.entities` and `link_preview_options`.
+- The missing inline-result fields: `caption_entities` and
+  `show_caption_above_media` across the photo, video, document, and cached
+  variants; `photo_width` / `photo_height`; `video_width` / `video_height` /
+  `video_duration`; and `thumbnail_width` / `thumbnail_height` on
+  `InlineQueryResultArticle` and `InlineQueryResultDocument`.
+
+A nested `thumbnail`, `cover`, or live-photo `photo` accepts an `InputFile` and
+uploads as its own multipart part, like `media` already did.
+
+### Changed
+- `EphemeralMessageParameters.receiver_user_id` is optional, and constructing
+  the type with neither it nor a `callback_query_id` raises `ValueError`.
+  Naming nobody is not a neutral default: Telegram reads such a message as an
+  ordinary one and shows it to the whole chat, which is the mistake this type
+  exists to prevent. Every existing call is unaffected.
+- `chat_id` is typed `Optional` on `send_message`, `send_rich_message`,
+  `send_photo`, `send_live_photo`, `send_document`, `send_audio`, `send_video`,
+  `send_animation`, `send_voice`, `send_video_note`, `send_sticker`,
+  `send_location`, `send_contact`, and `send_venue`. It stays positional with no
+  default, so passing it is still required and no existing call changes; `None`
+  is how the ephemeral-reply case is spelled.
+- The vendored spec moved from 10.3 to 10.4 (425 types, 193 methods), and the
+  generator now owns 80 types.
+- The spec drift check no longer takes a hand-maintained list of type names.
+  Listing them is what failed: the keyboards were added to the check in 1.3.1
+  and the media types were not, so they kept drifting. CI now finds every
+  dataclass the spec names that carries a `to_dict` and no `raw`, and holds all
+  71 of them to the spec. It also sets every modelled field and reads the
+  payload back, since declaring a field and serializing it are separate
+  mistakes.
+
+### Notes
+- `getUniqueGift` and `deleteBusinessAccountGift`, recorded in the method
+  coverage test's `UNIMPLEMENTED` list alongside the rest of the gift and
+  business-account surface. `bot.call()` reaches both in the meantime.
+- `verifyUser` and `verifyChat` gained `custom_description_parse_mode` and
+  `custom_description_entities`; both methods were already deferred, so there
+  was nothing to change.
+
 ## [1.3.1] - 2026-08-26
 
 The keyboard types are hand-written, while everything around them is generated

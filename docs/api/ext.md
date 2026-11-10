@@ -20,6 +20,10 @@
 
 ::: moonlygram.ext.CallbackQueryHandler
 
+::: moonlygram.ext.WidgetQueryHandler
+
+::: moonlygram.ext.SharedWidgetQueryHandler
+
 ::: moonlygram.ext.ConversationHandler
 
 ::: moonlygram.ext.TypeHandler
