@@ -84,6 +84,21 @@ GENERATE: set[str] = {
     # subscriptions and generation updates
     "BotSubscriptionUpdated",
     "MessageGenerationStopped",
+    # widgets (the queries they raise are hand-written, since they answer)
+    "Widget",
+    "WidgetQueryWallet",
+    "PaidMessagesWaived",
+    # TON wallet. AreaPosition was StoryAreaPosition until 10.4 renamed it,
+    # because a wallet card positions its stickers the same way a story does.
+    "AreaPosition",
+    "TonWalletCard",
+    "TonWalletCardSticker",
+    "TonNft",
+    "TonNftAttribute",
+    "TonWalletTransfer",
+    # chat share themes
+    "ChatShareThemeBackdrop",
+    "ChatShareThemeBackdrops",
 }
 
 # Abstract spec types modelled as a single FLAT dataclass: the union of every
@@ -99,6 +114,9 @@ FLAT_UNIONS: set[str] = {
     "ChatBoostSource",
     "TransactionPartner",
     "RevenueWithdrawalState",
+    "WidgetQueryType",
+    "ChatShareTheme",
+    "EmojiType",
 }
 
 # Behavior-bearing types that stay HAND-WRITTEN in types.py (async shortcut
@@ -115,6 +133,8 @@ BEHAVIOR_TYPES: set[str] = {
     "ChatJoinRequest",
     "ShippingQuery",
     "PreCheckoutQuery",
+    "WidgetQuery",
+    "SharedWidgetQuery",
 }
 
 # Other types the generator may reference by `.from_dict` but does not own here

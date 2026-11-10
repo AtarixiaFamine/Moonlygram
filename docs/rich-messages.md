@@ -67,6 +67,77 @@ text references a file through a `tg://photo?id=`, `tg://video?id=`,
 a list of `InputRichMessageMedia`. Each entry takes an `InputFile` to upload a
 new file, or a `file_id` / URL string.
 
+### Media
+
+`InputRichBlockPhoto`, `InputRichBlockVideo`, `InputRichBlockAnimation`,
+`InputRichBlockAudio`, `InputRichBlockVoiceNote`, and `InputRichBlockDocument`
+each wrap the matching `InputMedia` type. The wrapped media's own `caption` is
+ignored; the block's `caption` is what the reader sees.
+
+Set `supports_streaming` on a video you upload. Without it Telegram serves the
+file as a plain download and the reader waits for the whole thing before
+playback starts. It applies to uploads only: a `file_id` keeps whatever the
+original upload was sent with.
+
+```python
+from moonlygram import InputFile, InputMediaVideo
+from moonlygram.rich import InputRichBlockVideo, RichBlockCaption
+
+InputRichBlockVideo(
+    InputMediaVideo(
+        InputFile("clip.mp4"),
+        thumbnail=InputFile("thumb.jpg"),
+        width=1920,
+        height=1080,
+        duration=42,
+        supports_streaming=True,
+    ),
+    caption=RichBlockCaption(text="The finished render"),
+)
+```
+
+`cover` sets the frame shown before playback starts, and `start_timestamp` the
+second the video opens at. Nested files upload as their own multipart parts, so
+the video and its thumbnail can both be `InputFile`s.
+
+!!! warning "Keep video in a rich message under about 10 MB"
+
+    Tapping a larger video in a rich message plays a black frame. Measured on
+    2026-08-28 against live Telegram with lossless trims of one 1080p60 H.264
+    source: 5.2 MB plays, 13.5 MB and above do not. It affects both ways a
+    rich message carries media, the video block and the `tg://video?id=`
+    reference, so switching between them is not a way around it.
+
+    The same file sent with `send_video` plays normally at 44 MB, and the
+    upload itself is intact either way, so this is a rendering fault on
+    Telegram's side rather than a limit on what you can send. Until it is
+    fixed, send a large video as its own `send_video` message next to the rich
+    one.
+
+### Quoting a rich message
+
+A reply normally quotes with `quote` and `quote_entities`, a string plus
+offsets. A run of rich text can carry structure that neither expresses, so Bot
+API 10.4 gives it `ReplyParameters.quote_rich_texts`, which takes the rich
+nodes themselves. An incoming quote arrives the same way, in
+`TextQuote.rich_texts`.
+
+```python
+from moonlygram import ReplyParameters
+
+await bot.send_message(
+    chat_id,
+    "About that line:",
+    reply_parameters=ReplyParameters(
+        message_id=message.message_id,
+        quote_rich_texts=[{"type": "bold", "text": "the bold bit"}],
+    ),
+)
+```
+
+A received `RichTextNode` can go straight back, which is how a bot quotes the
+exact run it is replying about.
+
 ### Buttons
 
 `InputRichBlockButtons` puts a row of 1-8 buttons in the message body. Each

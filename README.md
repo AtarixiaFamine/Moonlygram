@@ -20,7 +20,7 @@
   <a href="https://pypi.org/project/moonlygram/"><img src="https://img.shields.io/pypi/v/moonlygram.svg?cacheSeconds=3600" alt="PyPI"></a>
   <img src="https://img.shields.io/pypi/pyversions/moonlygram.svg?cacheSeconds=3600" alt="Python versions">
   <img src="https://img.shields.io/badge/mypy-strict-blue.svg" alt="mypy strict">
-  <img src="https://img.shields.io/badge/Bot%20API-10.3-2CA5E0.svg" alt="Bot API 10.3">
+  <img src="https://img.shields.io/badge/Bot%20API-10.4-2CA5E0.svg" alt="Bot API 10.4">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License"></a>
 </p>
 
@@ -91,9 +91,9 @@ app.run_polling()
 ## Roadmap
 
 Core messaging, media, chat and member administration, bot configuration, forum topics,
-stickers, inline mode, and payments / Telegram Stars are all covered, and every modelled
-method accepts every parameter the Bot API defines for it (a drift test enforces this
-against the vendored spec). Still in progress: the niche Bot API domains of business
+stickers, inline mode, widgets, and payments / Telegram Stars are all covered, and every
+modelled method accepts every parameter the Bot API defines for it (a drift test enforces
+this against the vendored spec). Still in progress: the niche Bot API domains of business
 accounts, games, gifts and stories, checklists, and passport / paid media.
 
 ## Contributing

@@ -35,6 +35,19 @@ class User:
     username: Optional[str] = None
     last_name: Optional[str] = None
     language_code: Optional[str] = None
+    is_premium: Optional[bool] = None
+    added_to_attachment_menu: Optional[bool] = None
+    # the rest arrive only from get_me, describing this bot's own settings
+    can_join_groups: Optional[bool] = None
+    can_read_all_group_messages: Optional[bool] = None
+    supports_guest_queries: Optional[bool] = None
+    supports_inline_queries: Optional[bool] = None
+    can_connect_to_business: Optional[bool] = None
+    has_main_web_app: Optional[bool] = None
+    has_topics_enabled: Optional[bool] = None
+    allows_users_to_create_topics: Optional[bool] = None
+    can_manage_bots: Optional[bool] = None
+    supports_join_request_queries: Optional[bool] = None
     _bot: "Optional[Bot]" = field(default=None, init=False, repr=False, compare=False)
 
     @classmethod
@@ -46,6 +59,18 @@ class User:
             username=d.get("username"),
             last_name=d.get("last_name"),
             language_code=d.get("language_code"),
+            is_premium=d.get("is_premium"),
+            added_to_attachment_menu=d.get("added_to_attachment_menu"),
+            can_join_groups=d.get("can_join_groups"),
+            can_read_all_group_messages=d.get("can_read_all_group_messages"),
+            supports_guest_queries=d.get("supports_guest_queries"),
+            supports_inline_queries=d.get("supports_inline_queries"),
+            can_connect_to_business=d.get("can_connect_to_business"),
+            has_main_web_app=d.get("has_main_web_app"),
+            has_topics_enabled=d.get("has_topics_enabled"),
+            allows_users_to_create_topics=d.get("allows_users_to_create_topics"),
+            can_manage_bots=d.get("can_manage_bots"),
+            supports_join_request_queries=d.get("supports_join_request_queries"),
         )
 
     def set_bot(self, bot: "Bot") -> None:
@@ -62,6 +87,10 @@ class Chat:
     type: str
     title: Optional[str] = None
     username: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    is_forum: Optional[bool] = None
+    is_direct_messages: Optional[bool] = None
     _bot: "Optional[Bot]" = field(default=None, init=False, repr=False, compare=False)
 
     @classmethod
@@ -71,6 +100,10 @@ class Chat:
             type=d["type"],
             title=d.get("title"),
             username=d.get("username"),
+            first_name=d.get("first_name"),
+            last_name=d.get("last_name"),
+            is_forum=d.get("is_forum"),
+            is_direct_messages=d.get("is_direct_messages"),
         )
 
     def set_bot(self, bot: "Bot") -> None:
@@ -188,6 +221,9 @@ class Message:
     community_chat_added: Optional["CommunityChatAdded"] = None
     community_chat_joined: Optional["CommunityChatJoined"] = None
     community_chat_removed: Optional["CommunityChatRemoved"] = None
+    widget: Optional["Widget"] = None
+    ton_wallet_transfer: Optional["TonWalletTransfer"] = None
+    paid_messages_waived: Optional["PaidMessagesWaived"] = None
     reply_markup: Optional["InlineKeyboardMarkup"] = None
     raw: dict[str, Any] = field(default_factory=dict, repr=False)
     _bot: "Optional[Bot]" = field(default=None, init=False, repr=False, compare=False)
@@ -288,6 +324,17 @@ class Message:
             community_chat_removed=(
                 CommunityChatRemoved.from_dict(d["community_chat_removed"])
                 if "community_chat_removed" in d
+                else None
+            ),
+            widget=Widget.from_dict(d["widget"]) if "widget" in d else None,
+            ton_wallet_transfer=(
+                TonWalletTransfer.from_dict(d["ton_wallet_transfer"])
+                if "ton_wallet_transfer" in d
+                else None
+            ),
+            paid_messages_waived=(
+                PaidMessagesWaived.from_dict(d["paid_messages_waived"])
+                if "paid_messages_waived" in d
                 else None
             ),
             reply_markup=(
@@ -462,6 +509,125 @@ class ChosenInlineResult:
 
 
 @dataclass(slots=True)
+class WidgetQuery:
+    """An incoming query from a widget in a message sent by or via the bot.
+
+    A widget's HTML can call back to the bot, but only if the message was sent
+    with allow_queries. Answer within 15 seconds; Telegram accepts at most 5
+    queries per 5 seconds from one user across all of the bot's widgets.
+
+    An answer reaches only the widget that asked, and leaves what the widget
+    stores untouched. Changing what it shows is a separate edit, which
+    edit_widget_data() performs on the message this query came from.
+
+    chat and message_id locate the widget, except when it sits in an inline
+    message, where inline_message_id does instead.
+    """
+
+    id: str
+    from_user: User
+    chat_instance: str
+    type: "WidgetQueryType"
+    data: str
+    chat: Optional[Chat] = None
+    message_id: Optional[int] = None
+    inline_message_id: Optional[str] = None
+    chat_type: Optional[str] = None
+    widget_id: Optional[str] = None
+    raw: dict[str, Any] = field(default_factory=dict, repr=False)
+    _bot: "Optional[Bot]" = field(default=None, init=False, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "WidgetQuery":
+        return cls(
+            id=d["id"],
+            from_user=User.from_dict(d["from"]),
+            chat_instance=d["chat_instance"],
+            type=WidgetQueryType.from_dict(d["type"]),
+            data=d["data"],
+            chat=Chat.from_dict(d["chat"]) if "chat" in d else None,
+            message_id=d.get("message_id"),
+            inline_message_id=d.get("inline_message_id"),
+            chat_type=d.get("chat_type"),
+            widget_id=d.get("widget_id"),
+            raw=d,
+        )
+
+    def set_bot(self, bot: "Bot") -> None:
+        self._bot = bot
+        self.from_user.set_bot(bot)
+        if self.chat is not None:
+            self.chat.set_bot(bot)
+
+    async def answer(self, data: Optional[str] = None) -> bool:
+        """Answer this query, which Telegram expects within 15 seconds."""
+        return await _bound(self).answer_widget_query(self.id, data=data)
+
+    async def edit_widget_data(
+        self,
+        *,
+        public_data: Optional[str] = None,
+        chat_data: Optional[str] = None,
+    ) -> bool:
+        """Change the data of the widget this query came from.
+
+        Unlike answer(), this is visible to everyone who can see the message.
+        An omitted argument leaves that half of the data as it was; an empty
+        string clears it.
+        """
+        if self.inline_message_id is not None:
+            return await _bound(self).edit_message_widget_data(
+                inline_message_id=self.inline_message_id,
+                public_data=public_data,
+                chat_data=chat_data,
+            )
+        return await _bound(self).edit_message_widget_data(
+            chat_id=self.chat.id if self.chat is not None else None,
+            message_id=self.message_id,
+            public_data=public_data,
+            chat_data=chat_data,
+        )
+
+
+@dataclass(slots=True)
+class SharedWidgetQuery:
+    """An incoming query from a forwarded message carrying a shared widget.
+
+    A shared widget keeps working once the message holding it is forwarded, so
+    the query arrives with no chat or message to point at: widget_id names the
+    widget, and the answer goes back to the one copy that asked. Editing what
+    every copy shows is edit_shared_widget_data on the Bot.
+    """
+
+    id: str
+    from_user: User
+    type: "WidgetQueryType"
+    data: str
+    widget_id: str
+    raw: dict[str, Any] = field(default_factory=dict, repr=False)
+    _bot: "Optional[Bot]" = field(default=None, init=False, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "SharedWidgetQuery":
+        return cls(
+            id=d["id"],
+            from_user=User.from_dict(d["from"]),
+            type=WidgetQueryType.from_dict(d["type"]),
+            data=d["data"],
+            widget_id=d["widget_id"],
+            raw=d,
+        )
+
+    def set_bot(self, bot: "Bot") -> None:
+        self._bot = bot
+        self.from_user.set_bot(bot)
+
+    async def answer(self, data: Optional[str] = None) -> bool:
+        """Answer this query, which Telegram expects within 15 seconds."""
+        return await _bound(self).answer_widget_query(self.id, data=data)
+
+
+@dataclass(slots=True)
 class Update:
     update_id: int
     message: Optional[Message] = None
@@ -484,6 +650,8 @@ class Update:
     removed_chat_boost: Optional[ChatBoostRemoved] = None
     stopped_message_generation: Optional["MessageGenerationStopped"] = None
     subscription: Optional["BotSubscriptionUpdated"] = None
+    widget_query: Optional[WidgetQuery] = None
+    shared_widget_query: Optional[SharedWidgetQuery] = None
     raw: dict[str, Any] = field(default_factory=dict, repr=False)
 
     @classmethod
@@ -580,6 +748,16 @@ class Update:
                 if "subscription" in d
                 else None
             ),
+            widget_query=(
+                WidgetQuery.from_dict(d["widget_query"])
+                if "widget_query" in d
+                else None
+            ),
+            shared_widget_query=(
+                SharedWidgetQuery.from_dict(d["shared_widget_query"])
+                if "shared_widget_query" in d
+                else None
+            ),
             raw=d,
         )
 
@@ -618,6 +796,8 @@ class Update:
             return self.stopped_message_generation.chat.id
         if self.poll_answer is not None and self.poll_answer.voter_chat is not None:
             return self.poll_answer.voter_chat.id
+        if self.widget_query is not None and self.widget_query.chat is not None:
+            return self.widget_query.chat.id
         return None
 
     @property
@@ -654,6 +834,10 @@ class Update:
             return self.removed_chat_boost.source.user.id
         if self.subscription is not None:
             return self.subscription.user.id
+        if self.widget_query is not None:
+            return self.widget_query.from_user.id
+        if self.shared_widget_query is not None:
+            return self.shared_widget_query.from_user.id
         return None
 
     def set_bot(self, bot: "Bot") -> None:
@@ -707,6 +891,10 @@ class Update:
             self.stopped_message_generation.chat.set_bot(bot)
         if self.subscription is not None:
             self.subscription.user.set_bot(bot)
+        if self.widget_query is not None:
+            self.widget_query.set_bot(bot)
+        if self.shared_widget_query is not None:
+            self.shared_widget_query.set_bot(bot)
 
 
 @dataclass(slots=True)
@@ -752,6 +940,8 @@ class ChatPermissions:
     can_send_polls: Optional[bool] = None
     can_send_other_messages: Optional[bool] = None
     can_add_web_page_previews: Optional[bool] = None
+    can_react_to_messages: Optional[bool] = None
+    can_edit_tag: Optional[bool] = None
     can_invite_users: Optional[bool] = None
     can_pin_messages: Optional[bool] = None
     can_change_info: Optional[bool] = None
@@ -983,6 +1173,10 @@ class ReplyParameters:
     with message_id, or to an ephemeral message with ephemeral_message_id;
     exactly one of the two identifies the target. quote_entities, when given,
     is a list of already-serialized MessageEntity dicts.
+
+    A quote taken from a rich message goes in quote_rich_texts rather than
+    quote and quote_entities, because the quoted run can carry structure a
+    flat string and offsets cannot express.
     """
 
     message_id: Optional[int] = None
@@ -993,6 +1187,9 @@ class ReplyParameters:
     quote_parse_mode: Optional[str] = None
     quote_entities: Optional[list[dict[str, Any]]] = None
     quote_position: Optional[int] = None
+    quote_rich_texts: Optional[list["RichTextValue"]] = None
+    checklist_task_id: Optional[int] = None
+    poll_option_id: Optional[int] = None
 
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {
@@ -1004,6 +1201,9 @@ class ReplyParameters:
             "quote_parse_mode": self.quote_parse_mode,
             "quote_entities": self.quote_entities,
             "quote_position": self.quote_position,
+            "quote_rich_texts": self.quote_rich_texts,
+            "checklist_task_id": self.checklist_task_id,
+            "poll_option_id": self.poll_option_id,
         }
         return {k: v for k, v in d.items() if v is not None}
 
@@ -1016,14 +1216,33 @@ class EphemeralMessageParameters:
     callback_query_id to deliver it as the answer to a callback query, and
     replace_callback_query_message to show it in place of the message the
     button was attached to instead of as a new one.
+
+    Since Bot API 10.4, callback_query_id on its own is enough: the message
+    goes to whoever pressed the button. That is how a bot answers a button
+    ephemerally in a chat where it has no user id to name, and it works
+    everywhere except a channel's direct-messages chat. Give the send method
+    chat_id=None when the callback query is all that identifies the recipient.
     """
 
-    receiver_user_id: int
+    receiver_user_id: Optional[int] = None
     callback_query_id: Optional[str] = None
     replace_callback_query_message: Optional[bool] = None
 
+    def __post_init__(self) -> None:
+        # Naming nobody is not a neutral default: Telegram reads parameters
+        # that identify no recipient as an ordinary message and shows it to
+        # the whole chat, which is the one mistake this type exists to stop.
+        if self.receiver_user_id is None and self.callback_query_id is None:
+            raise ValueError(
+                "An ephemeral message needs receiver_user_id, "
+                "callback_query_id, or both. With neither, Telegram would "
+                "deliver it to the whole chat."
+            )
+
     def to_dict(self) -> dict[str, Any]:
-        d: dict[str, Any] = {"receiver_user_id": self.receiver_user_id}
+        d: dict[str, Any] = {}
+        if self.receiver_user_id is not None:
+            d["receiver_user_id"] = self.receiver_user_id
         if self.callback_query_id is not None:
             d["callback_query_id"] = self.callback_query_id
         if self.replace_callback_query_message is not None:
@@ -1211,16 +1430,31 @@ class InputMediaPhoto:
     media: FileInput
     caption: Optional[str] = None
     parse_mode: Optional[str] = None
+    caption_entities: Optional[list[MessageEntity]] = None
+    show_caption_above_media: Optional[bool] = None
+    has_spoiler: Optional[bool] = None
 
     def to_dict(self) -> dict[str, Any]:
-        return _input_media_dict("photo", self.media, self.caption, self.parse_mode)
+        return _input_media_dict(
+            "photo",
+            self.media,
+            self.caption,
+            self.parse_mode,
+            caption_entities=self.caption_entities,
+            show_caption_above_media=self.show_caption_above_media,
+            has_spoiler=self.has_spoiler,
+        )
 
 
 @dataclass(slots=True)
 class InputMediaVideo:
-    """A video for a media group or editMessageMedia.
+    """A video for a media group, a rich message, or editMessageMedia.
 
-    media is an InputFile to upload, or a file_id / URL string.
+    media is an InputFile to upload, or a file_id / URL string. Set
+    supports_streaming on an uploaded video that can be played while it is
+    still downloading; without it the reader waits for the whole file. cover
+    sets the thumbnail shown before playback starts, and start_timestamp the
+    second the video should open at.
     """
 
     media: FileInput
@@ -1229,6 +1463,13 @@ class InputMediaVideo:
     width: Optional[int] = None
     height: Optional[int] = None
     duration: Optional[int] = None
+    thumbnail: Optional[FileInput] = None
+    cover: Optional[FileInput] = None
+    start_timestamp: Optional[int] = None
+    caption_entities: Optional[list[MessageEntity]] = None
+    show_caption_above_media: Optional[bool] = None
+    supports_streaming: Optional[bool] = None
+    has_spoiler: Optional[bool] = None
 
     def to_dict(self) -> dict[str, Any]:
         return _input_media_dict(
@@ -1239,6 +1480,43 @@ class InputMediaVideo:
             width=self.width,
             height=self.height,
             duration=self.duration,
+            thumbnail=self.thumbnail,
+            cover=self.cover,
+            start_timestamp=self.start_timestamp,
+            caption_entities=self.caption_entities,
+            show_caption_above_media=self.show_caption_above_media,
+            supports_streaming=self.supports_streaming,
+            has_spoiler=self.has_spoiler,
+        )
+
+
+@dataclass(slots=True)
+class InputMediaLivePhoto:
+    """A live photo for a media group.
+
+    A live photo is a still frame plus a short video. media carries the video
+    and photo the still; both are an InputFile to upload, or a file_id / URL
+    string.
+    """
+
+    media: FileInput
+    photo: FileInput
+    caption: Optional[str] = None
+    parse_mode: Optional[str] = None
+    caption_entities: Optional[list[MessageEntity]] = None
+    show_caption_above_media: Optional[bool] = None
+    has_spoiler: Optional[bool] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return _input_media_dict(
+            "live_photo",
+            self.media,
+            self.caption,
+            self.parse_mode,
+            photo=self.photo,
+            caption_entities=self.caption_entities,
+            show_caption_above_media=self.show_caption_above_media,
+            has_spoiler=self.has_spoiler,
         )
 
 
@@ -1252,6 +1530,8 @@ class InputMediaAudio:
     duration: Optional[int] = None
     performer: Optional[str] = None
     title: Optional[str] = None
+    thumbnail: Optional[FileInput] = None
+    caption_entities: Optional[list[MessageEntity]] = None
 
     def to_dict(self) -> dict[str, Any]:
         return _input_media_dict(
@@ -1262,6 +1542,8 @@ class InputMediaAudio:
             duration=self.duration,
             performer=self.performer,
             title=self.title,
+            thumbnail=self.thumbnail,
+            caption_entities=self.caption_entities,
         )
 
 
@@ -1275,9 +1557,20 @@ class InputMediaDocument:
     media: FileInput
     caption: Optional[str] = None
     parse_mode: Optional[str] = None
+    thumbnail: Optional[FileInput] = None
+    caption_entities: Optional[list[MessageEntity]] = None
+    disable_content_type_detection: Optional[bool] = None
 
     def to_dict(self) -> dict[str, Any]:
-        return _input_media_dict("document", self.media, self.caption, self.parse_mode)
+        return _input_media_dict(
+            "document",
+            self.media,
+            self.caption,
+            self.parse_mode,
+            thumbnail=self.thumbnail,
+            caption_entities=self.caption_entities,
+            disable_content_type_detection=self.disable_content_type_detection,
+        )
 
 
 @dataclass(slots=True)
@@ -1290,6 +1583,10 @@ class InputMediaAnimation:
     width: Optional[int] = None
     height: Optional[int] = None
     duration: Optional[int] = None
+    thumbnail: Optional[FileInput] = None
+    caption_entities: Optional[list[MessageEntity]] = None
+    show_caption_above_media: Optional[bool] = None
+    has_spoiler: Optional[bool] = None
 
     def to_dict(self) -> dict[str, Any]:
         return _input_media_dict(
@@ -1300,6 +1597,10 @@ class InputMediaAnimation:
             width=self.width,
             height=self.height,
             duration=self.duration,
+            thumbnail=self.thumbnail,
+            caption_entities=self.caption_entities,
+            show_caption_above_media=self.show_caption_above_media,
+            has_spoiler=self.has_spoiler,
         )
 
 
@@ -1316,6 +1617,7 @@ class InputMediaVoiceNote:
     caption: Optional[str] = None
     parse_mode: Optional[str] = None
     duration: Optional[int] = None
+    caption_entities: Optional[list[MessageEntity]] = None
 
     def to_dict(self) -> dict[str, Any]:
         return _input_media_dict(
@@ -1324,6 +1626,7 @@ class InputMediaVoiceNote:
             self.caption,
             self.parse_mode,
             duration=self.duration,
+            caption_entities=self.caption_entities,
         )
 
 
@@ -1587,11 +1890,86 @@ class InputTextMessageContent:
 
     message_text: str
     parse_mode: Optional[str] = None
+    entities: Optional[list[MessageEntity]] = None
+    link_preview_options: "Optional[LinkPreviewOptions]" = None
 
     def to_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {"message_text": self.message_text}
         if self.parse_mode is not None:
             d["parse_mode"] = self.parse_mode
+        if self.entities is not None:
+            d["entities"] = [e.to_dict() for e in self.entities]
+        if self.link_preview_options is not None:
+            d["link_preview_options"] = _maybe_to_dict(self.link_preview_options)
+        return d
+
+
+@dataclass(slots=True)
+class InputWidgetMessageContent:
+    """An HTML widget as an inline query result's sent message.
+
+    Telegram does not serve widgets from inline queries in production yet, so
+    this is here for the test environment and for whenever that changes. Set
+    allow_queries for a widget that calls back to the bot, and is_shared to
+    get a widget_id that send_shared_widget can reuse.
+    """
+
+    html: str
+    width: Optional[int] = None
+    height: Optional[int] = None
+    public_data: Optional[str] = None
+    chat_data: Optional[str] = None
+    caption: Optional[str] = None
+    parse_mode: Optional[str] = None
+    caption_entities: Optional[list[MessageEntity]] = None
+    show_caption_above_media: Optional[bool] = None
+    allow_queries: Optional[bool] = None
+    is_shared: Optional[bool] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {"html": self.html}
+        for key in (
+            "width",
+            "height",
+            "public_data",
+            "chat_data",
+            "caption",
+            "parse_mode",
+            "show_caption_above_media",
+            "allow_queries",
+            "is_shared",
+        ):
+            value = getattr(self, key)
+            if value is not None:
+                d[key] = value
+        if self.caption_entities is not None:
+            d["caption_entities"] = [e.to_dict() for e in self.caption_entities]
+        return d
+
+
+@dataclass(slots=True)
+class InputSharedWidgetMessageContent:
+    """A shared widget the bot already created, as an inline result's message.
+
+    widget_id is the one a shared widget reported in Widget.id. Like
+    InputWidgetMessageContent, production inline queries do not carry this yet.
+    """
+
+    widget_id: str
+    chat_data: Optional[str] = None
+    caption: Optional[str] = None
+    parse_mode: Optional[str] = None
+    caption_entities: Optional[list[MessageEntity]] = None
+    show_caption_above_media: Optional[bool] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {"widget_id": self.widget_id}
+        for key in ("chat_data", "caption", "parse_mode", "show_caption_above_media"):
+            value = getattr(self, key)
+            if value is not None:
+                d[key] = value
+        if self.caption_entities is not None:
+            d["caption_entities"] = [e.to_dict() for e in self.caption_entities]
         return d
 
 
@@ -1606,6 +1984,8 @@ class InlineQueryResultArticle:
     url: Optional[str] = None
     description: Optional[str] = None
     thumbnail_url: Optional[str] = None
+    thumbnail_width: Optional[int] = None
+    thumbnail_height: Optional[int] = None
 
     def to_dict(self) -> dict[str, Any]:
         return _inline_result_dict(
@@ -1615,6 +1995,8 @@ class InlineQueryResultArticle:
             url=self.url,
             description=self.description,
             thumbnail_url=self.thumbnail_url,
+            thumbnail_width=self.thumbnail_width,
+            thumbnail_height=self.thumbnail_height,
             reply_markup=self.reply_markup,
             input_message_content=self.input_message_content,
         )
@@ -1631,6 +2013,10 @@ class InlineQueryResultPhoto:
     description: Optional[str] = None
     caption: Optional[str] = None
     parse_mode: Optional[str] = None
+    photo_width: Optional[int] = None
+    photo_height: Optional[int] = None
+    caption_entities: Optional[list[MessageEntity]] = None
+    show_caption_above_media: Optional[bool] = None
     reply_markup: "Optional[InlineKeyboardMarkup]" = None
     input_message_content: "Optional[InputMessageContent]" = None
 
@@ -1640,10 +2026,14 @@ class InlineQueryResultPhoto:
             self.id,
             photo_url=self.photo_url,
             thumbnail_url=self.thumbnail_url,
+            photo_width=self.photo_width,
+            photo_height=self.photo_height,
             title=self.title,
             description=self.description,
             caption=self.caption,
             parse_mode=self.parse_mode,
+            caption_entities=self.caption_entities,
+            show_caption_above_media=self.show_caption_above_media,
             reply_markup=self.reply_markup,
             input_message_content=self.input_message_content,
         )
@@ -1659,8 +2049,11 @@ class InlineQueryResultDocument:
     mime_type: str
     caption: Optional[str] = None
     parse_mode: Optional[str] = None
+    caption_entities: Optional[list[MessageEntity]] = None
     description: Optional[str] = None
     thumbnail_url: Optional[str] = None
+    thumbnail_width: Optional[int] = None
+    thumbnail_height: Optional[int] = None
     reply_markup: "Optional[InlineKeyboardMarkup]" = None
     input_message_content: "Optional[InputMessageContent]" = None
 
@@ -1673,8 +2066,11 @@ class InlineQueryResultDocument:
             mime_type=self.mime_type,
             caption=self.caption,
             parse_mode=self.parse_mode,
+            caption_entities=self.caption_entities,
             description=self.description,
             thumbnail_url=self.thumbnail_url,
+            thumbnail_width=self.thumbnail_width,
+            thumbnail_height=self.thumbnail_height,
             reply_markup=self.reply_markup,
             input_message_content=self.input_message_content,
         )
@@ -1691,6 +2087,11 @@ class InlineQueryResultVideo:
     title: str
     caption: Optional[str] = None
     parse_mode: Optional[str] = None
+    caption_entities: Optional[list[MessageEntity]] = None
+    show_caption_above_media: Optional[bool] = None
+    video_width: Optional[int] = None
+    video_height: Optional[int] = None
+    video_duration: Optional[int] = None
     description: Optional[str] = None
     reply_markup: "Optional[InlineKeyboardMarkup]" = None
     input_message_content: "Optional[InputMessageContent]" = None
@@ -1705,6 +2106,11 @@ class InlineQueryResultVideo:
             title=self.title,
             caption=self.caption,
             parse_mode=self.parse_mode,
+            caption_entities=self.caption_entities,
+            show_caption_above_media=self.show_caption_above_media,
+            video_width=self.video_width,
+            video_height=self.video_height,
+            video_duration=self.video_duration,
             description=self.description,
             reply_markup=self.reply_markup,
             input_message_content=self.input_message_content,
@@ -1721,6 +2127,8 @@ class InlineQueryResultCachedPhoto:
     description: Optional[str] = None
     caption: Optional[str] = None
     parse_mode: Optional[str] = None
+    caption_entities: Optional[list[MessageEntity]] = None
+    show_caption_above_media: Optional[bool] = None
     reply_markup: "Optional[InlineKeyboardMarkup]" = None
     input_message_content: "Optional[InputMessageContent]" = None
 
@@ -1733,6 +2141,8 @@ class InlineQueryResultCachedPhoto:
             description=self.description,
             caption=self.caption,
             parse_mode=self.parse_mode,
+            caption_entities=self.caption_entities,
+            show_caption_above_media=self.show_caption_above_media,
             reply_markup=self.reply_markup,
             input_message_content=self.input_message_content,
         )
@@ -1748,6 +2158,7 @@ class InlineQueryResultCachedDocument:
     description: Optional[str] = None
     caption: Optional[str] = None
     parse_mode: Optional[str] = None
+    caption_entities: Optional[list[MessageEntity]] = None
     reply_markup: "Optional[InlineKeyboardMarkup]" = None
     input_message_content: "Optional[InputMessageContent]" = None
 
@@ -1760,6 +2171,7 @@ class InlineQueryResultCachedDocument:
             description=self.description,
             caption=self.caption,
             parse_mode=self.parse_mode,
+            caption_entities=self.caption_entities,
             reply_markup=self.reply_markup,
             input_message_content=self.input_message_content,
         )
@@ -1775,6 +2187,8 @@ class InlineQueryResultCachedVideo:
     description: Optional[str] = None
     caption: Optional[str] = None
     parse_mode: Optional[str] = None
+    caption_entities: Optional[list[MessageEntity]] = None
+    show_caption_above_media: Optional[bool] = None
     reply_markup: "Optional[InlineKeyboardMarkup]" = None
     input_message_content: "Optional[InputMessageContent]" = None
 
@@ -1787,6 +2201,8 @@ class InlineQueryResultCachedVideo:
             description=self.description,
             caption=self.caption,
             parse_mode=self.parse_mode,
+            caption_entities=self.caption_entities,
+            show_caption_above_media=self.show_caption_above_media,
             reply_markup=self.reply_markup,
             input_message_content=self.input_message_content,
         )
@@ -1953,6 +2369,7 @@ InputMedia = Union[
     InputMediaAudio,
     InputMediaDocument,
     InputMediaAnimation,
+    InputMediaLivePhoto,
     dict[str, Any],
 ]
 
@@ -1969,7 +2386,12 @@ ReactionType = Union[
 ]
 
 #: Content for an inline result's sent message (or a raw dict).
-InputMessageContent = Union[InputTextMessageContent, dict[str, Any]]
+InputMessageContent = Union[
+    InputTextMessageContent,
+    InputWidgetMessageContent,
+    InputSharedWidgetMessageContent,
+    dict[str, Any],
+]
 
 #: An inline query result for answer_inline_query (or a raw dict for the long tail).
 InlineQueryResult = Union[
@@ -1992,6 +2414,7 @@ InlineQueryResult = Union[
 from ._types_generated import (  # noqa: E402
     AffiliateInfo as AffiliateInfo,
     Animation as Animation,
+    AreaPosition as AreaPosition,
     Audio as Audio,
     BotDescription as BotDescription,
     BotName as BotName,
@@ -2004,6 +2427,9 @@ from ._types_generated import (  # noqa: E402
     ChatInviteLink as ChatInviteLink,
     ChatMember as ChatMember,
     ChatMemberUpdated as ChatMemberUpdated,
+    ChatShareTheme as ChatShareTheme,
+    ChatShareThemeBackdrop as ChatShareThemeBackdrop,
+    ChatShareThemeBackdrops as ChatShareThemeBackdrops,
     Community as Community,
     CommunityChatAdded as CommunityChatAdded,
     CommunityChatJoined as CommunityChatJoined,
@@ -2011,6 +2437,7 @@ from ._types_generated import (  # noqa: E402
     Contact as Contact,
     Dice as Dice,
     Document as Document,
+    EmojiType as EmojiType,
     File as File,
     ForumTopic as ForumTopic,
     Invoice as Invoice,
@@ -2023,6 +2450,7 @@ from ._types_generated import (  # noqa: E402
     MessageReactionCountUpdated as MessageReactionCountUpdated,
     MessageReactionUpdated as MessageReactionUpdated,
     OrderInfo as OrderInfo,
+    PaidMessagesWaived as PaidMessagesWaived,
     PhotoSize as PhotoSize,
     Poll as Poll,
     PollAnswer as PollAnswer,
@@ -2042,6 +2470,11 @@ from ._types_generated import (  # noqa: E402
     Sticker as Sticker,
     StickerSet as StickerSet,
     SuccessfulPayment as SuccessfulPayment,
+    TonNft as TonNft,
+    TonNftAttribute as TonNftAttribute,
+    TonWalletCard as TonWalletCard,
+    TonWalletCardSticker as TonWalletCardSticker,
+    TonWalletTransfer as TonWalletTransfer,
     TransactionPartner as TransactionPartner,
     UniqueGift as UniqueGift,
     UniqueGiftBackdrop as UniqueGiftBackdrop,
@@ -2056,6 +2489,9 @@ from ._types_generated import (  # noqa: E402
     Video as Video,
     VideoNote as VideoNote,
     Voice as Voice,
+    Widget as Widget,
+    WidgetQueryType as WidgetQueryType,
+    WidgetQueryWallet as WidgetQueryWallet,
 )
 
 #: A received rich message. The spec calls this RichMessage, a name the

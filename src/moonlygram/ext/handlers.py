@@ -483,3 +483,59 @@ class BotSubscriptionHandler(BaseHandler):
 
     def check_update(self, update: Update) -> bool:
         return update.subscription is not None
+
+
+class WidgetQueryHandler(BaseHandler):
+    """Run the callback on a query from a widget, optionally filtered by data.
+
+    A widget raises a query only if its message was sent with allow_queries.
+    If pattern is given, the query's data must match it (re.search).
+
+    The callback is expected to answer within 15 seconds, which
+    update.widget_query.answer() does.
+    """
+
+    def __init__(
+        self,
+        callback: Callback,
+        *,
+        pattern: str | re.Pattern[str] | None = None,
+        block: bool = True,
+    ) -> None:
+        super().__init__(callback, block=block)
+        self.pattern = re.compile(pattern) if pattern is not None else None
+
+    def check_update(self, update: Update) -> bool:
+        query = update.widget_query
+        if query is None:
+            return False
+        if self.pattern is None:
+            return True
+        return self.pattern.search(query.data) is not None
+
+
+class SharedWidgetQueryHandler(BaseHandler):
+    """Run the callback on a query from a forwarded shared widget.
+
+    These arrive from copies of a message the bot did not send, so the query
+    names no chat or message: widget_id identifies the widget it came from.
+    If pattern is given, the query's data must match it (re.search).
+    """
+
+    def __init__(
+        self,
+        callback: Callback,
+        *,
+        pattern: str | re.Pattern[str] | None = None,
+        block: bool = True,
+    ) -> None:
+        super().__init__(callback, block=block)
+        self.pattern = re.compile(pattern) if pattern is not None else None
+
+    def check_update(self, update: Update) -> bool:
+        query = update.shared_widget_query
+        if query is None:
+            return False
+        if self.pattern is None:
+            return True
+        return self.pattern.search(query.data) is not None

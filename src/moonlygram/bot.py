@@ -21,6 +21,7 @@ from .types import (
     ChatInviteLink,
     ChatMember,
     ChatPermissions,
+    ChatShareThemeBackdrops,
     EphemeralMessageParameters,
     File,
     FileInput,
@@ -145,7 +146,7 @@ class Bot:
 
     async def send_message(
         self,
-        chat_id: int | str,
+        chat_id: Optional[int | str],
         text: str,
         *,
         business_connection_id: Optional[str] = None,
@@ -258,7 +259,7 @@ class Bot:
 
     async def send_rich_message(
         self,
-        chat_id: int | str,
+        chat_id: Optional[int | str],
         *,
         html: "Optional[str | RichMessage]" = None,
         markdown: Optional[str] = None,
@@ -339,7 +340,7 @@ class Bot:
 
     async def send_photo(
         self,
-        chat_id: int | str,
+        chat_id: Optional[int | str],
         photo: FileInput,
         *,
         business_connection_id: Optional[str] = None,
@@ -388,7 +389,7 @@ class Bot:
 
     async def send_live_photo(
         self,
-        chat_id: int | str,
+        chat_id: Optional[int | str],
         live_photo: FileInput,
         photo: FileInput,
         *,
@@ -441,7 +442,7 @@ class Bot:
 
     async def send_document(
         self,
-        chat_id: int | str,
+        chat_id: Optional[int | str],
         document: FileInput,
         *,
         business_connection_id: Optional[str] = None,
@@ -490,7 +491,7 @@ class Bot:
 
     async def send_audio(
         self,
-        chat_id: int | str,
+        chat_id: Optional[int | str],
         audio: FileInput,
         *,
         business_connection_id: Optional[str] = None,
@@ -543,7 +544,7 @@ class Bot:
 
     async def send_video(
         self,
-        chat_id: int | str,
+        chat_id: Optional[int | str],
         video: FileInput,
         *,
         business_connection_id: Optional[str] = None,
@@ -610,7 +611,7 @@ class Bot:
 
     async def send_animation(
         self,
-        chat_id: int | str,
+        chat_id: Optional[int | str],
         animation: FileInput,
         *,
         business_connection_id: Optional[str] = None,
@@ -667,7 +668,7 @@ class Bot:
 
     async def send_voice(
         self,
-        chat_id: int | str,
+        chat_id: Optional[int | str],
         voice: FileInput,
         *,
         business_connection_id: Optional[str] = None,
@@ -714,7 +715,7 @@ class Bot:
 
     async def send_video_note(
         self,
-        chat_id: int | str,
+        chat_id: Optional[int | str],
         video_note: FileInput,
         *,
         business_connection_id: Optional[str] = None,
@@ -759,7 +760,7 @@ class Bot:
 
     async def send_sticker(
         self,
-        chat_id: int | str,
+        chat_id: Optional[int | str],
         sticker: FileInput,
         *,
         business_connection_id: Optional[str] = None,
@@ -800,7 +801,7 @@ class Bot:
 
     async def send_location(
         self,
-        chat_id: int | str,
+        chat_id: Optional[int | str],
         latitude: float,
         longitude: float,
         *,
@@ -853,7 +854,7 @@ class Bot:
 
     async def send_contact(
         self,
-        chat_id: int | str,
+        chat_id: Optional[int | str],
         phone_number: str,
         first_name: str,
         *,
@@ -1041,7 +1042,7 @@ class Bot:
 
     async def send_venue(
         self,
-        chat_id: int | str,
+        chat_id: Optional[int | str],
         latitude: float,
         longitude: float,
         title: str,
@@ -1088,6 +1089,114 @@ class Bot:
                 reply_markup=reply_markup,
                 reply_to_message_id=reply_to_message_id,
                 ephemeral_message_parameters=ephemeral_message_parameters,
+                reply_parameters=reply_parameters,
+            )
+        )
+
+    async def send_widget(
+        self,
+        chat_id: int | str,
+        html: str,
+        *,
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        public_data: Optional[str] = None,
+        chat_data: Optional[str] = None,
+        caption: Optional[str] = None,
+        parse_mode: Optional[str] = None,
+        caption_entities: Optional[list[MessageEntity]] = None,
+        show_caption_above_media: Optional[bool] = None,
+        allow_queries: Optional[bool] = None,
+        is_shared: Optional[bool] = None,
+        message_thread_id: Optional[int] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        reply_markup: Optional[ReplyMarkup] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
+    ) -> Message:
+        """Send a message carrying an HTML widget.
+
+        html is the widget itself, 1-32768 bytes, and must still fit in 4096
+        bytes once zlib has compressed it at maximum level. width and height
+        are logical pixels; the app clamps width to 200 or wider and height to
+        50-600, and omitting either lets the widget size itself.
+
+        Two flags decide what the widget can do afterwards. allow_queries lets
+        it call back to the bot, which arrives as a widget_query update.
+        is_shared gives the sent Widget an id, which send_shared_widget takes
+        to put the same widget in another message.
+
+        Production Telegram accepts widgets in private chats only, and a sent
+        widget always has protected content, so it cannot be forwarded.
+        """
+        return Message.from_dict(
+            await self._call(
+                "sendWidget",
+                chat_id=chat_id,
+                html=html,
+                width=width,
+                height=height,
+                public_data=public_data,
+                chat_data=chat_data,
+                caption=caption,
+                parse_mode=parse_mode,
+                caption_entities=caption_entities,
+                show_caption_above_media=show_caption_above_media,
+                allow_queries=allow_queries,
+                is_shared=is_shared,
+                message_thread_id=message_thread_id,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                reply_markup=reply_markup,
+                reply_parameters=reply_parameters,
+            )
+        )
+
+    async def send_shared_widget(
+        self,
+        chat_id: int | str,
+        widget_id: str,
+        *,
+        chat_data: Optional[str] = None,
+        caption: Optional[str] = None,
+        parse_mode: Optional[str] = None,
+        caption_entities: Optional[list[MessageEntity]] = None,
+        show_caption_above_media: Optional[bool] = None,
+        message_thread_id: Optional[int] = None,
+        disable_notification: Optional[bool] = None,
+        protect_content: Optional[bool] = None,
+        allow_paid_broadcast: Optional[bool] = None,
+        message_effect_id: Optional[str] = None,
+        reply_markup: Optional[ReplyMarkup] = None,
+        reply_parameters: "Optional[ReplyParameters]" = None,
+    ) -> Message:
+        """Send a shared widget the bot created earlier, again.
+
+        widget_id comes from the Widget.id of a message sent with
+        is_shared=True. Every message carrying the widget shares its public
+        data, so editing that data with edit_shared_widget_data changes all of
+        them at once; chat_data is this message's own.
+        """
+        return Message.from_dict(
+            await self._call(
+                "sendSharedWidget",
+                chat_id=chat_id,
+                widget_id=widget_id,
+                chat_data=chat_data,
+                caption=caption,
+                parse_mode=parse_mode,
+                caption_entities=caption_entities,
+                show_caption_above_media=show_caption_above_media,
+                message_thread_id=message_thread_id,
+                disable_notification=disable_notification,
+                protect_content=protect_content,
+                allow_paid_broadcast=allow_paid_broadcast,
+                message_effect_id=message_effect_id,
+                reply_markup=reply_markup,
                 reply_parameters=reply_parameters,
             )
         )
@@ -1752,6 +1861,84 @@ class Bot:
                 url=url,
                 cache_time=cache_time,
             )
+        )
+
+    async def answer_widget_query(
+        self,
+        widget_query_id: str,
+        *,
+        data: Optional[str] = None,
+    ) -> bool:
+        """Answer a query raised by one of the bot's widgets. Returns True.
+
+        Telegram expects the answer within 15 seconds. It reaches only the
+        widget that asked and changes nothing it stores, so use
+        edit_message_widget_data or edit_shared_widget_data to change what the
+        widget shows. data is 0-1024 bytes.
+        """
+        return bool(
+            await self._call(
+                "answerWidgetQuery",
+                widget_query_id=widget_query_id,
+                data=data,
+            )
+        )
+
+    async def edit_message_widget_data(
+        self,
+        *,
+        chat_id: Optional[int | str] = None,
+        message_id: Optional[int] = None,
+        inline_message_id: Optional[str] = None,
+        public_data: Optional[str] = None,
+        chat_data: Optional[str] = None,
+    ) -> bool:
+        """Change the data of a widget in a message. Returns True on success.
+
+        Identify the message with chat_id and message_id, or an inline one
+        with inline_message_id. Each of public_data and chat_data is 0-1024
+        bytes; an omitted one is left as it was and an empty string clears it.
+        A shared widget's public data accepts at most one change per second.
+        """
+        return bool(
+            await self._call(
+                "editMessageWidgetData",
+                chat_id=chat_id,
+                message_id=message_id,
+                inline_message_id=inline_message_id,
+                public_data=public_data,
+                chat_data=chat_data,
+            )
+        )
+
+    async def edit_shared_widget_data(
+        self,
+        widget_id: str,
+        public_data: str,
+        *,
+        cache_time: Optional[int] = None,
+    ) -> bool:
+        """Change a shared widget's public data. Returns True on success.
+
+        This reaches every message carrying the widget, not one of them, and
+        Telegram accepts at most one change per second. public_data is 0-1024
+        bytes; an empty string clears it. cache_time is how long a client may
+        hold the data, 5-3600 seconds, and defaults to the current value (30
+        unless it has been set).
+        """
+        return bool(
+            await self._call(
+                "editSharedWidgetData",
+                widget_id=widget_id,
+                public_data=public_data,
+                cache_time=cache_time,
+            )
+        )
+
+    async def get_chat_share_theme_backdrops(self) -> ChatShareThemeBackdrops:
+        """Get the backdrops a chat-share theme can use as its background."""
+        return ChatShareThemeBackdrops.from_dict(
+            await self._call("getChatShareThemeBackdrops")
         )
 
     async def ban_chat_member(

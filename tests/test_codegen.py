@@ -14,6 +14,7 @@ import dataclasses
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -105,4 +106,96 @@ def test_keyboard_type_matches_spec_fields(name: str) -> None:
     modelled = set(getattr(types, name).__dataclass_fields__) | stamped
     assert modelled == _spec_field_names(name), (
         f"{name} drifted from the Bot API spec; add the field to types.py"
+    )
+
+
+# Everything above covers one family at a time, which is how InputMediaVideo
+# still ended up seven fields short: nothing listed it. A sent type is the one
+# place a missing field is unreachable rather than merely unmodelled, because
+# it has no raw dict to fall back on and slots=True leaves nowhere to put the
+# value. So rather than a list to keep current, find them: any dataclass the
+# spec names, carrying a to_dict and no raw, that the generator does not own.
+# A new hand-written sent type is covered the day it lands.
+STAMPED = {
+    # required spec fields that to_dict writes rather than stores
+    "ForceReply": {"force_reply"},
+    "ReplyKeyboardRemove": {"remove_keyboard"},
+}
+
+
+def _sent_types() -> dict[str, type]:
+    found: dict[str, type] = {}
+    for module in (types, rich):
+        for attr in dir(module):
+            obj = getattr(module, attr)
+            if not dataclasses.is_dataclass(obj) or attr not in SPEC["types"]:
+                continue
+            if attr in ov.GENERATE | ov.FLAT_UNIONS:
+                continue  # the generator owns it, checked above
+            if not hasattr(obj, "to_dict") or "raw" in obj.__dataclass_fields__:
+                continue  # received: unmodelled fields stay reachable via raw
+            found.setdefault(attr, obj)
+    return found
+
+
+SENT_TYPES = _sent_types()
+
+
+def test_the_sent_type_scan_finds_something() -> None:
+    # guards the guard: a filter that silently matches nothing would pass
+    assert "InputMediaVideo" in SENT_TYPES and len(SENT_TYPES) > 20
+
+
+# Modelling a field is only half of it: to_dict has to write it out too. Both
+# halves failed together on InputMediaVideo, and the field check alone would
+# pass on a dataclass whose to_dict quietly ignored it. Setting every field and
+# reading the payload back covers the other half. Nested objects need a real
+# value rather than a placeholder string.
+NESTED = {
+    "mask_position": types.MaskPosition(point="forehead", x_shift=0.0, y_shift=0.0, scale=1.0),
+    "price": types.SuggestedPostPrice(currency="XTR", amount=1),
+}
+
+
+def _placeholder(field: dataclasses.Field[Any]) -> Any:
+    if field.name in NESTED:
+        return NESTED[field.name]
+    annotation = str(field.type)
+    if "bool" in annotation:
+        return True
+    if "list" in annotation:
+        return []
+    if "int" in annotation and "str" not in annotation:
+        return 7
+    return "x"
+
+
+@pytest.mark.parametrize("name", sorted(SENT_TYPES))
+def test_sent_type_writes_every_field_it_models(name: str) -> None:
+    cls = SENT_TYPES[name]
+    values = {
+        f.name: _placeholder(f)
+        for f in dataclasses.fields(cls)
+        if not f.name.startswith("_")
+    }
+    payload = cls(**values).to_dict()
+    dropped = sorted(k for k in values if k not in payload)
+    assert not dropped, f"{name}.to_dict() silently drops {dropped}"
+
+
+@pytest.mark.parametrize("name", sorted(SENT_TYPES))
+def test_sent_type_matches_spec_fields(name: str) -> None:
+    cls = SENT_TYPES[name]
+    stamped = STAMPED.get(name, set())
+    # a required `type` is the discriminator to_dict stamps; an optional one
+    # (a list item's label style) is a real field the caller sets
+    if any(
+        f["name"] == "type" and f.get("required")
+        for f in SPEC["types"][name].get("fields", [])
+    ):
+        stamped = stamped | {"type"}
+    modelled = {f for f in cls.__dataclass_fields__ if not f.startswith("_")}
+    assert modelled | stamped == _spec_field_names(name), (
+        f"{name} drifted from the Bot API spec; add the field to types.py. "
+        "A sent type has no raw dict, so an unmodelled field is unreachable."
     )

@@ -80,6 +80,7 @@ nav:
       - Performance: performance.md
       - Rich messages: rich-messages.md
       - Ephemeral messages: ephemeral-messages.md
+      - Widgets: widgets.md
   - API reference:
       - Bot: api/bot.md
       - Application & handlers: api/ext.md

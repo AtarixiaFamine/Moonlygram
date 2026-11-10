@@ -465,3 +465,51 @@ def test_rich_message_button_round_trips():
 
     sent = RichMessageButton("Go", callback_data="g", style="primary")
     assert RichMessageButton.from_dict(sent.to_dict()) == sent
+
+
+def test_reply_parameters_quote_rich_text():
+    """A quote from a rich message cannot be a string plus offsets, so 10.4
+    gives it its own field that takes the rich nodes themselves."""
+    from moonlygram import ReplyParameters
+    from moonlygram.session import _serialize
+
+    params = ReplyParameters(
+        message_id=5,
+        quote_rich_texts=[{"type": "bold", "text": "quoted"}],
+        quote_position=3,
+    )
+    assert _serialize(params) == {
+        "message_id": 5,
+        "quote_rich_texts": [{"type": "bold", "text": "quoted"}],
+        "quote_position": 3,
+    }
+    # unset, it stays out of the payload entirely
+    assert "quote_rich_texts" not in ReplyParameters(message_id=5).to_dict()
+
+
+def test_reply_parameters_quote_received_rich_text_nodes():
+    """A received RichTextNode can go straight back as a quote, which is how a
+    bot quotes the exact run it was replying about."""
+    from moonlygram import ReplyParameters, RichTextNode
+    from moonlygram.session import _serialize
+
+    node = RichTextNode.from_dict({"type": "ton_address", "address": "EQC_addr"})
+    payload = _serialize(ReplyParameters(message_id=5, quote_rich_texts=[node]))
+    assert payload["quote_rich_texts"] == [
+        {"type": "ton_address", "address": "EQC_addr"}
+    ]
+
+
+def test_rich_text_models_a_ton_address():
+    """Bot API 10.4 added the ton_address run to rich text. Like a bank card
+    number it is detected by Telegram rather than authored, so it only has to
+    parse on the way in."""
+    from moonlygram import RichTextNode
+
+    node = RichTextNode.from_dict({
+        "type": "ton_address",
+        "text": "EQC_addr",
+        "address": "EQC_addr",
+    })
+    assert node.type == "ton_address"
+    assert node.address == "EQC_addr"

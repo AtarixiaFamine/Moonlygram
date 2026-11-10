@@ -190,3 +190,95 @@ def test_bot_command_is_ephemeral_roundtrip():
     assert parsed.is_ephemeral is True
     # The field is omitted when unset, keeping existing payloads unchanged.
     assert BotCommand("a", "b").to_dict() == {"command": "a", "description": "b"}
+
+
+# --- Bot API 10.4: a callback query is enough to name the recipient --------
+
+
+def test_parameters_accept_a_callback_query_alone():
+    """Before 10.4 a receiver_user_id was required even when answering a
+    button press, which a bot in a chat it knows no user ids for cannot give."""
+    params = EphemeralMessageParameters(callback_query_id="cb")
+    assert params.to_dict() == {"callback_query_id": "cb"}
+    assert params.receiver_user_id is None
+
+
+def test_parameters_naming_nobody_are_refused():
+    import pytest
+
+    with pytest.raises(ValueError, match="whole chat"):
+        EphemeralMessageParameters()
+
+
+async def test_send_message_without_a_chat_id_answers_the_query():
+    """Answering a callback query ephemerally needs no chat: passing None
+    leaves chat_id out of the payload rather than sending a null."""
+    bot, session = fake_bot(_MESSAGE_DICT)
+    await bot.send_message(
+        None,
+        "Only you can see this.",
+        ephemeral_message_parameters=EphemeralMessageParameters(
+            callback_query_id="cb"
+        ),
+    )
+    method, params = session.calls[0]
+    assert method == "sendMessage"
+    assert "chat_id" not in params
+    assert params["ephemeral_message_parameters"] == {"callback_query_id": "cb"}
+
+
+async def test_every_ephemeral_capable_sender_takes_a_null_chat_id():
+    """The spec made chat_id optional on fourteen send methods at once, so
+    check the shape holds across the media ones rather than only sendMessage."""
+    cases = [
+        ("send_photo", ("file123",), "sendPhoto"),
+        ("send_document", ("file123",), "sendDocument"),
+        ("send_video", ("file123",), "sendVideo"),
+        ("send_animation", ("file123",), "sendAnimation"),
+        ("send_audio", ("file123",), "sendAudio"),
+        ("send_voice", ("file123",), "sendVoice"),
+        ("send_video_note", ("file123",), "sendVideoNote"),
+        ("send_sticker", ("file123",), "sendSticker"),
+        ("send_contact", ("+100", "A"), "sendContact"),
+        ("send_location", (1.0, 2.0), "sendLocation"),
+        ("send_venue", (1.0, 2.0, "T", "A"), "sendVenue"),
+    ]
+    for attr, args, method_name in cases:
+        bot, session = fake_bot(_MESSAGE_DICT)
+        await getattr(bot, attr)(
+            None,
+            *args,
+            ephemeral_message_parameters=EphemeralMessageParameters(
+                callback_query_id="cb"
+            ),
+        )
+        method, params = session.calls[0]
+        assert method == method_name
+        assert "chat_id" not in params, f"{attr} still sent a chat_id"
+
+
+async def test_send_rich_message_also_answers_a_query_without_a_chat():
+    bot, session = fake_bot(_MESSAGE_DICT)
+    await bot.send_rich_message(
+        None,
+        html="<b>hi</b>",
+        ephemeral_message_parameters=EphemeralMessageParameters(
+            callback_query_id="cb"
+        ),
+    )
+    method, params = session.calls[0]
+    assert method == "sendRichMessage"
+    assert "chat_id" not in params
+
+
+async def test_a_receiver_still_works_on_its_own():
+    """The 10.3 spelling is untouched: widening the type broke no caller."""
+    bot, session = fake_bot(_MESSAGE_DICT)
+    await bot.send_message(
+        1,
+        "hi",
+        ephemeral_message_parameters=EphemeralMessageParameters(receiver_user_id=99),
+    )
+    _, params = session.calls[0]
+    assert params["chat_id"] == 1
+    assert params["ephemeral_message_parameters"] == {"receiver_user_id": 99}
